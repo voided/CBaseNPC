@@ -8,20 +8,6 @@
 			{
 				"windows"   "15"
 			}
-			// Windows: locate the references to TheNavMesh and TheNavAreas in CNavMesh::Load.
-			"TheNavMesh"
-			{
-				"windows"	"481"
-			}
-			"TheNavAreas"
-			{
-				"windows"	"687"
-			}
-			// Windows: locate the reference to g_TouchTrace in CBaseEntity::PhysicsMarkEntitiesAsTouching.
-			"g_TouchTrace"
-			{
-				"windows"	"10"
-			}
 			"g_EntityListPool"
 			{
 				"windows"	"17"
@@ -383,7 +369,44 @@
 			}
 		}
 		"Addresses"
-		{		
+		{
+			// Resolve the storage for TheNavMesh.
+			"TheNavMesh"
+			{
+				"linux"
+				{
+					"signature"	"TheNavMesh"
+				}
+				"windows"
+				{
+					"signature"	"CNavMesh::Load"
+					"read"		"481"
+				}
+			}
+			"TheNavAreas"
+			{
+				"linux"
+				{
+					"signature"	"TheNavAreas"
+				}
+				"windows"
+				{
+					"signature"	"CNavMesh::Load"
+					"read"		"687"
+				}
+			}
+			"g_TouchTrace"
+			{
+				"linux"
+				{
+					"signature"	"g_TouchTrace"
+				}
+				"windows"
+				{
+					"signature"	"CBaseEntity::PhysicsMarkEntitiesAsTouching"
+					"read"		"10"
+				}
+			}
 			"GetAnimationEvent"
 			{
 				"windows"
