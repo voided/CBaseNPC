@@ -8,21 +8,18 @@
 			{
 				"windows"   "15"
 			}
-			// Locate CNavMesh::Load, first dword is TheNavMesh second is TheNavAreas
+			// Windows: locate the references to TheNavMesh and TheNavAreas in CNavMesh::Load.
 			"TheNavMesh"
 			{
-				"linux"		"813"
 				"windows"	"481"
 			}
 			"TheNavAreas"
 			{
-				"linux"		"1201"
 				"windows"	"687"
 			}
-			// Locate CBaseEntity::PhysicsMarkEntitiesAsTouching, first dword is g_TouchTrace
+			// Windows: locate the reference to g_TouchTrace in CBaseEntity::PhysicsMarkEntitiesAsTouching.
 			"g_TouchTrace"
 			{
-				"linux"		"53"
 				"windows"	"10"
 			}
 			"g_EntityListPool"
@@ -200,6 +197,21 @@
 				"library"		"server"
 				"windows"		"\x55\x8B\xEC\x81\xEC\xD4\x00\x00\x00\x53\x8B\x5D\x0C"
 				"linux"			"@_ZN12CTFGameRules29ApplyOnDamageAliveModifyRulesERK15CTakeDamageInfoP11CBaseEntityRNS_20DamageModifyExtras_tE"
+			}
+			"TheNavMesh"
+			{
+				"library"		"server"
+				"linux"			"@TheNavMesh"
+			}
+			"TheNavAreas"
+			{
+				"library"		"server"
+				"linux"			"@TheNavAreas"
+			}
+			"g_TouchTrace"
+			{
+				"library"		"server"
+				"linux"			"@_ZL12g_TouchTrace"
 			}
 			// Find string "Invalid navigation file.\n"
 			"CNavMesh::Load"
@@ -382,7 +394,7 @@
 				"linux"
 				{
 					"signature"	"__GetAnimationEvent__"
-					"offset"	"204"
+					"offset"	"205"
 				}
 			}
 		}
