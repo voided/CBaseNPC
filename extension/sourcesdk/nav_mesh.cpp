@@ -28,49 +28,22 @@ DETOUR_DECL_MEMBER0(CNavMesh_Load, NavErrorType)
 
 bool CNavMesh::Init(SourceMod::IGameConfig* config, char* error, size_t maxlength)
 {
-#ifdef __linux__
-	void* address = nullptr;
-	if (!config->GetMemSig("TheNavMesh", &address) || !address)
+	void* navMeshAddress = nullptr;
+	if (!config->GetAddress("TheNavMesh", &navMeshAddress) || !navMeshAddress)
 	{
-		snprintf(error, maxlength, "Failed to resolve TheNavMesh symbol!");
+		snprintf(error, maxlength, "Failed to resolve TheNavMesh address!");
 		return false;
 	}
-	TheNavMesh = *static_cast<CNavMesh**>(address);
 
-	if (!config->GetMemSig("TheNavAreas", &address) || !address)
+	void* navAreasAddress = nullptr;
+	if (!config->GetAddress("TheNavAreas", &navAreasAddress) || !navAreasAddress)
 	{
-		snprintf(error, maxlength, "Failed to resolve TheNavAreas symbol!");
+		snprintf(error, maxlength, "Failed to resolve TheNavAreas address!");
 		return false;
 	}
-	pTheNavAreas = static_cast<NavAreaVector*>(address);
-#else
-	uint8_t* addr = nullptr;
-	if (config->GetMemSig("CNavMesh::Load", (void**)&addr) && addr)
-	{
-		int offset;
-		if (!config->GetOffset("TheNavMesh", &offset) || !offset)
-		{
-			snprintf(error, maxlength, "Couldn't find offset for TheNavMesh ptr!");
-			return false;
-		}
-		
-		CNavMesh** pTheNavMesh = *reinterpret_cast<CNavMesh***>(addr + offset);
-		TheNavMesh = *pTheNavMesh;
 
-		if (!config->GetOffset("TheNavAreas", &offset) || !offset)
-		{
-			snprintf(error, maxlength, "Couldn't find offset for TheNavAreas ptr!");
-			return false;
-		}
-
-		pTheNavAreas = *reinterpret_cast<NavAreaVector**>(addr + offset);
-	}
-	else
-	{
-		snprintf(error, maxlength, "Failed to retrieve TheNavMesh ptr!");
-		return false;
-	}
-#endif
+	TheNavMesh = *static_cast<CNavMesh**>(navMeshAddress);
+	pTheNavAreas = static_cast<NavAreaVector*>(navAreasAddress);
 
 	g_pNavMeshLoad = DETOUR_CREATE_MEMBER(CNavMesh_Load, "CNavMesh::Load");
 	if (g_pNavMeshLoad != nullptr)
