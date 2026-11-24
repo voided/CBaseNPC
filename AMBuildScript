@@ -339,6 +339,8 @@ class ExtensionConfig(object):
     # Work around SDK warnings.
     if cxx.version >= 'clang-10.0':
       cxx.cflags += ['-Wno-implicit-int-float-conversion', '-Wno-tautological-overlap-compare']
+    if cxx.family == 'clang' and cxx.version >= 'clang-22.0':
+      cxx.cxxflags += ['-Wno-nontrivial-memcall']
 
     if have_gcc:
       cxx.cflags += ['-mfpmath=sse']
