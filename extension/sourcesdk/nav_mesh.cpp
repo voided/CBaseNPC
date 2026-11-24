@@ -28,6 +28,22 @@ DETOUR_DECL_MEMBER0(CNavMesh_Load, NavErrorType)
 
 bool CNavMesh::Init(SourceMod::IGameConfig* config, char* error, size_t maxlength)
 {
+#ifdef __linux__
+	void* address = nullptr;
+	if (!config->GetMemSig("TheNavMesh", &address) || !address)
+	{
+		snprintf(error, maxlength, "Failed to resolve TheNavMesh symbol!");
+		return false;
+	}
+	TheNavMesh = *static_cast<CNavMesh**>(address);
+
+	if (!config->GetMemSig("TheNavAreas", &address) || !address)
+	{
+		snprintf(error, maxlength, "Failed to resolve TheNavAreas symbol!");
+		return false;
+	}
+	pTheNavAreas = static_cast<NavAreaVector*>(address);
+#else
 	uint8_t* addr = nullptr;
 	if (config->GetMemSig("CNavMesh::Load", (void**)&addr) && addr)
 	{
@@ -54,6 +70,7 @@ bool CNavMesh::Init(SourceMod::IGameConfig* config, char* error, size_t maxlengt
 		snprintf(error, maxlength, "Failed to retrieve TheNavMesh ptr!");
 		return false;
 	}
+#endif
 
 	g_pNavMeshLoad = DETOUR_CREATE_MEMBER(CNavMesh_Load, "CNavMesh::Load");
 	if (g_pNavMeshLoad != nullptr)

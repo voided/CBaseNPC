@@ -157,6 +157,15 @@ bool CBaseEntity::Init(SourceMod::IGameConfig* config, char* error, size_t maxle
 		return false;
 	}
 
+#ifdef __linux__
+	void* address = nullptr;
+	if (!config->GetMemSig("g_TouchTrace", &address) || !address)
+	{
+		snprintf(error, maxlength, "Failed to resolve g_TouchTrace symbol!");
+		return false;
+	}
+	g_pTouchTrace = static_cast<trace_t*>(address);
+#else
 	uint8_t* addr = nullptr;
 	if (config->GetMemSig("CBaseEntity::PhysicsMarkEntitiesAsTouching", (void**)&addr) && addr)
 	{
@@ -174,6 +183,7 @@ bool CBaseEntity::Init(SourceMod::IGameConfig* config, char* error, size_t maxle
 		snprintf(error, maxlength, "Failed to retrieve g_TouchTrace!");
 		return false;
 	}
+#endif
 
 	// Any entity that inherits CBaseEntity is good
 	BEGIN_VAR("trigger_stun");

@@ -1,4 +1,6 @@
 #include "sourcesdk/baseanimating.h"
+#include <cstring>
+#include <npcevent.h>
 #include <smsdk_ext.h>
 #include <sh_memory.h>
 #include <IGameHelpers.h>
@@ -67,15 +69,31 @@ bool CBaseAnimating::Init(SourceMod::IGameConfig* config, char* error, size_t ma
 	END_VAR;
 
 	void* aVal = nullptr;
-	if (!config->GetAddress("GetAnimationEvent", &aVal))
+	if (!config->GetAddress("GetAnimationEvent", &aVal) || !aVal)
 	{
 		snprintf(error, maxlength, "Failed to retrieve GetAnimationEvent address!");
 		return false;
 	}
 
-	uint8_t* aGetAnimationEvent = reinterpret_cast<uint8_t*>(aVal);
-	SourceHook::SetMemAccess(aGetAnimationEvent, sizeof(uint32_t), SH_MEM_READ | SH_MEM_WRITE | SH_MEM_EXEC);
-	*(uint32_t*)(aGetAnimationEvent) = 9999;
+	constexpr uint32_t extendedEventLimit = 9999;
+	uint32_t eventLimit;
+	std::memcpy(&eventLimit, aVal, sizeof(eventLimit));
+	if (eventLimit == extendedEventLimit)
+		return true;
+
+	// The engine compares against EVENT_CLIENT or EVENT_CLIENT - 1 depending on the compiler.
+	if (eventLimit != EVENT_CLIENT && eventLimit != EVENT_CLIENT - 1)
+	{
+		snprintf(error, maxlength, "Unexpected GetAnimationEvent limit (%u). Check gamedata.", eventLimit);
+		return false;
+	}
+
+	if (!SourceHook::SetMemAccess(aVal, sizeof(extendedEventLimit), SH_MEM_READ | SH_MEM_WRITE | SH_MEM_EXEC))
+	{
+		snprintf(error, maxlength, "Failed to make the GetAnimationEvent patch writable!");
+		return false;
+	}
+	std::memcpy(aVal, &extendedEventLimit, sizeof(extendedEventLimit));
 
 	return true;
 }
