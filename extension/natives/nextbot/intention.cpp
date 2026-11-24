@@ -1,4 +1,5 @@
 #include "intention.hpp"
+#include "pawn_tokens.h"
 
 #include "sourcesdk/basecombatcharacter.h"
 #include "sourcesdk/NextBot/NextBotIntentionInterface.h"
@@ -6,7 +7,7 @@
 namespace natives::nextbot::intention {
 
 inline IIntention* Get(IPluginContext* context, const cell_t param) {
-	IIntention* intention = (IIntention*)PawnAddressToPtr(param);
+	IIntention* intention = (IIntention*)PawnTokenToPtr(param);
 	if (!intention) {
 		context->ThrowNativeError("Intention ptr is null!");
 		return nullptr;
@@ -67,7 +68,7 @@ cell_t ShouldAttack(IPluginContext* context, const cell_t* params) {
 		return 0;
 	}
 	
-	CKnownEntity* them = reinterpret_cast< CKnownEntity* >( PawnAddressToPtr(params[2]) );
+	CKnownEntity* them = reinterpret_cast< CKnownEntity* >( PawnTokenToPtr(params[2]) );
 	if (!them) {
 		return context->ThrowNativeError("them entity is a null ptr!");
 	}
@@ -171,12 +172,12 @@ cell_t SelectMoreDangerousThreat(IPluginContext* context, const cell_t* params) 
 		return context->ThrowNativeError( "Subject entity is not a CBaseCombatCharacter.");
 	}
 
-	CKnownEntity* threat1 = reinterpret_cast< CKnownEntity* >( PawnAddressToPtr(params[3]) );
+	CKnownEntity* threat1 = reinterpret_cast< CKnownEntity* >( PawnTokenToPtr(params[3]) );
 	if (!threat1) {
 		return context->ThrowNativeError("threat1 entity cannot be a null ptr!");
 	}
 
-	CKnownEntity* threat2 = reinterpret_cast< CKnownEntity* >( PawnAddressToPtr(params[4]) );
+	CKnownEntity* threat2 = reinterpret_cast< CKnownEntity* >( PawnTokenToPtr(params[4]) );
 	if (!threat2) {
 		return context->ThrowNativeError("threat2 entity cannot be a null ptr!");
 	}
@@ -186,7 +187,7 @@ cell_t SelectMoreDangerousThreat(IPluginContext* context, const cell_t* params) 
 		return context->ThrowNativeError("GetBot returned null!");
 	}
 
-	return PtrToPawnAddress(intention->SelectMoreDangerousThreat(me, subject, threat1, threat2));
+	return PtrToPawnToken(intention->SelectMoreDangerousThreat(me, subject, threat1, threat2));
 }
 
 void setup(std::vector<sp_nativeinfo_t>& natives) {

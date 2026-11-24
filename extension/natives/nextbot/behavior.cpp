@@ -1,4 +1,5 @@
 #include "behavior.hpp"
+#include "pawn_tokens.h"
 #include "cbasenpc_behavior.h"
 
 namespace natives::nextbot::behavior {
@@ -39,7 +40,7 @@ cell_t NextBotActionFactory_Ctor(IPluginContext* context, const cell_t* params) 
 		return context->ThrowNativeError("Action must have a name");
 	}
 	
-	IPlugin* plugin = plsys->FindPluginByContext(context->GetContext());
+	IPlugin* plugin = plsys->FindPluginByContext(context);
 	CBaseNPCPluginActionFactory* factory = new CBaseNPCPluginActionFactory(plugin, name);
 	return factory->m_Handle;
 }
@@ -83,7 +84,7 @@ cell_t Create(IPluginContext* context, const cell_t* params) {
 		return 0;
 	}
 
-	return PtrToPawnAddress(factory->Create());
+	return PtrToPawnToken(factory->Create(), PawnTokenLifetime::Owned);
 }
 
 cell_t BeginDataMapDesc(IPluginContext* context, const cell_t* params) {
@@ -171,7 +172,7 @@ void setup(std::vector<sp_nativeinfo_t>& natives) {
 }
 
 inline CBaseNPCPluginAction* Get(IPluginContext* context, const cell_t param) {
-	CBaseNPCPluginAction* action = (CBaseNPCPluginAction*)PawnAddressToPtr(param);
+	CBaseNPCPluginAction* action = (CBaseNPCPluginAction*)PawnTokenToPtr(param);
 	if (!action) {
 		context->ThrowNativeError("CBaseNPCPluginAction ptr is null!");
 		return nullptr;
@@ -301,7 +302,7 @@ cell_t GetParent(IPluginContext* context, const cell_t* params) {
 		return 0;
 	}
 
-	return PtrToPawnAddress(action->GetParentAction());
+	return PtrToPawnToken(action->GetParentAction());
 }
 
 cell_t GetActiveChild(IPluginContext* context, const cell_t* params) {
@@ -310,7 +311,7 @@ cell_t GetActiveChild(IPluginContext* context, const cell_t* params) {
 		return 0;
 	}
 
-	return PtrToPawnAddress(action->GetActiveChildAction());
+	return PtrToPawnToken(action->GetActiveChildAction());
 }
 
 cell_t GetActionBuriedUnderMe(IPluginContext* context, const cell_t* params) {
@@ -319,7 +320,7 @@ cell_t GetActionBuriedUnderMe(IPluginContext* context, const cell_t* params) {
 		return 0;
 	}
 
-	return PtrToPawnAddress(action->GetActionBuriedUnderMe());
+	return PtrToPawnToken(action->GetActionBuriedUnderMe());
 }
 
 cell_t GetActionCoveringMe(IPluginContext* context, const cell_t* params) {
@@ -328,7 +329,7 @@ cell_t GetActionCoveringMe(IPluginContext* context, const cell_t* params) {
 		return 0;
 	}
 
-	return PtrToPawnAddress(action->GetActionCoveringMe());
+	return PtrToPawnToken(action->GetActionCoveringMe());
 }
 
 cell_t GetIsSuspended(IPluginContext* context, const cell_t* params) {
@@ -531,7 +532,7 @@ cell_t ChangeTo(IPluginContext* context, const cell_t* params) {
 
 	char* reason = nullptr;
 	context->LocalToStringNULL( params[3], &reason );
-	action->PluginChangeTo( (CBaseNPCPluginAction*)PawnAddressToPtr(params[2]), reason );
+	action->PluginChangeTo( (CBaseNPCPluginAction*)PawnTokenToPtr(params[2]), reason );
 	return 0;
 }
 
@@ -547,7 +548,7 @@ cell_t SuspendFor(IPluginContext* context, const cell_t* params) {
 
 	char* reason = nullptr;
 	context->LocalToStringNULL( params[3], &reason );
-	action->PluginSuspendFor( (CBaseNPCPluginAction*)PawnAddressToPtr(params[2]), reason );
+	action->PluginSuspendFor( (CBaseNPCPluginAction*)PawnTokenToPtr(params[2]), reason );
 	return 0;
 }
 
@@ -591,7 +592,7 @@ cell_t TryChangeTo(IPluginContext* context, const cell_t* params) {
 		return context->ThrowNativeError( "Cannot use TryChangeTo() outside of event callback" );
 	}
 
-	CBaseNPCPluginAction* otherAction = (CBaseNPCPluginAction*)PawnAddressToPtr(params[2]);
+	CBaseNPCPluginAction* otherAction = (CBaseNPCPluginAction*)PawnTokenToPtr(params[2]);
 	if (!otherAction) {
 		return context->ThrowNativeError("action is NULL");
 	}
@@ -613,7 +614,7 @@ cell_t TrySuspendFor(IPluginContext* context, const cell_t* params) {
 		return context->ThrowNativeError( "Cannot use TrySuspendFor() outside of event callback" );
 	}
 		
-	CBaseNPCPluginAction* otherAction = (CBaseNPCPluginAction*)PawnAddressToPtr(params[2]);
+	CBaseNPCPluginAction* otherAction = (CBaseNPCPluginAction*)PawnTokenToPtr(params[2]);
 	if (!otherAction) {
 		return context->ThrowNativeError("action is NULL");
 	}

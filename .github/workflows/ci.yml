@@ -1,17 +1,20 @@
-name: CI
+name: Experimental x64 CI
 
 on:
   push:
-    branches: [master, 'feature/**']
+    branches: [feature/x64]
   pull_request:
-    branches: [master, 'feature/**']
+    branches: [feature/x64]
   workflow_dispatch:
 
 permissions:
   contents: read
 
 env:
-  SOURCEMOD_BRANCH: 1.12-dev
+  SOURCEMOD_BRANCH: master
+  LIBFFI_VERSION: 3.5.2
+  LIBFFI_SHA256: f3a3082a23b37c293a4fcd1053147b371f2ff91fa7ea1b2a52e335676bac82dc
+  VCPKG_REF: 2025.12.12
 
 jobs:
   build-plugins:
@@ -53,7 +56,7 @@ jobs:
           if-no-files-found: error
 
   build-extension:
-    name: ${{ matrix.target.os_name }}-x86
+    name: ${{ matrix.target.os_name }}-${{ matrix.target.arch }}
     needs: build-plugins
     runs-on: ${{ matrix.target.runner }}
     container: ${{ matrix.target.container }}
@@ -66,10 +69,29 @@ jobs:
             container: ghcr.io/alliedmodders/build-containers/debian11-clang22:latest
             python: python3
             suffix: so
+            arch: x86
+            host: i686-pc-linux-gnu
+            bits: 32
+          - runner: ubuntu-latest
+            os_name: linux
+            container: ghcr.io/alliedmodders/build-containers/debian11-clang22:latest
+            python: python3
+            suffix: so
+            arch: x86_64
+            host: x86_64-pc-linux-gnu
+            bits: 64
           - runner: windows-latest
             os_name: windows
             python: python
             suffix: dll
+            arch: x86
+            msvc: x86
+          - runner: windows-latest
+            os_name: windows
+            python: python
+            suffix: dll
+            arch: x86_64
+            msvc: x64
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -88,7 +110,7 @@ jobs:
         if: runner.os == 'Windows'
         uses: ilammy/msvc-dev-cmd@v1
         with:
-          arch: x86
+          arch: ${{ matrix.target.msvc }}
 
       - name: Install AMBuild (Windows)
         if: runner.os == 'Windows'
@@ -103,23 +125,64 @@ jobs:
             --branch 1.12-dev https://github.com/alliedmodders/metamod-source.git mmsource
           git clone --depth 1 --branch tf2 https://github.com/alliedmodders/hl2sdk.git hl2sdk-tf2
 
+      - name: Build static libffi (Linux)
+        if: runner.os == 'Linux'
+        shell: bash
+        env:
+          ARCH: ${{ matrix.target.arch }}
+          HOST: ${{ matrix.target.host }}
+          BITS: ${{ matrix.target.bits }}
+        run: |
+          curl -fsSL "https://github.com/libffi/libffi/releases/download/v$LIBFFI_VERSION/libffi-$LIBFFI_VERSION.tar.gz" -o libffi.tar.gz
+          printf '%s  libffi.tar.gz\n' "$LIBFFI_SHA256" | sha256sum -c -
+          tar -xzf libffi.tar.gz
+          cd "libffi-$LIBFFI_VERSION"
+          ./configure --host="$HOST" --prefix="$GITHUB_WORKSPACE/libffi/$ARCH" \
+            --disable-shared --enable-static --with-pic --disable-docs CC="clang-22 -m$BITS"
+          make -j"$(nproc)"
+          make install
+
+      - name: Install static libffi (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        env:
+          ARCH: ${{ matrix.target.arch }}
+          MSVC_ARCH: ${{ matrix.target.msvc }}
+        run: |
+          $triplet = "${env:MSVC_ARCH}-windows-static"
+          $vcpkg = Join-Path $env:RUNNER_TEMP vcpkg
+          git clone --depth 1 --branch $env:VCPKG_REF https://github.com/microsoft/vcpkg.git $vcpkg
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          & "$vcpkg/bootstrap-vcpkg.bat" -disableMetrics
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          & "$vcpkg/vcpkg.exe" install "libffi:$triplet"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          New-Item -ItemType Directory libffi | Out-Null
+          New-Item -ItemType Junction "libffi/$env:ARCH" -Target "$vcpkg/installed/$triplet" | Out-Null
+
       - name: Build extension
         shell: bash
         env:
           PYTHON: ${{ matrix.target.python }}
           EXTENSION_SUFFIX: ${{ matrix.target.suffix }}
+          ARCH: ${{ matrix.target.arch }}
         run: |
           if [ "$RUNNER_OS" = Linux ]; then
             git config --global --add safe.directory "$PWD"
+            export CC=clang-22 CXX=clang++-22
           fi
           mkdir build
           cd build
           "$PYTHON" ../configure.py \
             --extension-only --enable-optimize --enable-auto-versioning \
-            --targets=x86 --sdks=tf2 \
+            --targets="$ARCH" --sdks=tf2 --libffi-root ../libffi \
             --sm-path ../sourcemod --mms-path ../mmsource --hl2sdk-root ..
           ambuild
-          test -s "package/addons/sourcemod/extensions/cbasenpc.ext.2.tf2.$EXTENSION_SUFFIX"
+          extension_dir=package/addons/sourcemod/extensions
+          if [ "$ARCH" = x86_64 ]; then
+            extension_dir+=/x64
+          fi
+          test -s "$extension_dir/cbasenpc.ext.2.tf2.$EXTENSION_SUFFIX"
 
       - name: Add example plugins to package
         uses: actions/download-artifact@v8
@@ -130,12 +193,12 @@ jobs:
       - name: Upload package artifact
         uses: actions/upload-artifact@v7
         with:
-          name: pkg-${{ matrix.target.os_name }}-x86
+          name: experimental-${{ matrix.target.os_name }}-${{ matrix.target.arch }}
           path: build/package/
           if-no-files-found: error
 
       - name: Upload release version
-        if: runner.os == 'Linux' && github.ref == 'refs/heads/master'
+        if: matrix.target.os_name == 'linux' && matrix.target.arch == 'x86_64' && github.ref == 'refs/heads/feature/x64'
         uses: actions/upload-artifact@v7
         with:
           name: release-version
@@ -143,9 +206,9 @@ jobs:
           if-no-files-found: error
 
   release:
-    name: Release
+    name: Publish experimental x64 prerelease
     needs: build-extension
-    if: github.ref == 'refs/heads/master' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+    if: github.ref == 'refs/heads/feature/x64' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -160,8 +223,8 @@ jobs:
         run: |
           version=$(cat artifacts/release-version/git_action_release)
           mkdir assets
-          tar -czf "assets/cbasenpc${version}_linux.tar.gz" -C artifacts/pkg-linux-x86 addons
-          (cd artifacts/pkg-windows-x86 && python3 -m zipfile -c "../../assets/cbasenpc${version}_windows.zip" addons)
+          tar -czf "assets/cbasenpc${version}-experimental-x64-linux.tar.gz" -C artifacts/experimental-linux-x86_64 addons
+          (cd artifacts/experimental-windows-x86_64 && python3 -m zipfile -c "../../assets/cbasenpc${version}-experimental-x64-windows.zip" addons)
           echo "version=$version" >> "$GITHUB_OUTPUT"
 
       - name: Create release
@@ -169,8 +232,13 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           VERSION: ${{ steps.package.outputs.version }}
         run: |
-          gh release create "$VERSION" assets/* \
+          tag="$VERSION-experimental-x64-${GITHUB_SHA:0:12}"
+          if gh release view "$tag" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            exit 0
+          fi
+          gh release create "$tag" assets/* \
             --repo "$GITHUB_REPOSITORY" \
             --target "$GITHUB_SHA" \
-            --title "CBaseNPC $VERSION" \
-            --notes "Automated release built from $GITHUB_SHA."
+            --title "CBaseNPC $VERSION Experimental x64" \
+            --prerelease --latest=false \
+            --notes "Experimental 64-bit TF2 build for SourceMod 1.13, built from $GITHUB_SHA."

@@ -1,4 +1,5 @@
 #include "pluginentityfactory.h"
+#include "pawn_tokens.h"
 #include "entityfactorydictionary.h"
 #include "cbasenpc_internal.h"
 #include "cbasenpc_behavior.h"
@@ -113,35 +114,29 @@ CPluginEntityFactories::CPluginEntityFactories()
 PluginFactoryEntityRecord_t* CPluginEntityFactories::FindRecord(CBaseEntity* pEntity, bool create)
 {
 	if (!pEntity)
-	{
 		return nullptr;
-	}
-	
-	cell_t key = (cell_t)pEntity;
-	if (m_Records.find(key) == m_Records.end())
+
+	auto it = m_Records.find(pEntity);
+	if (it != m_Records.end())
 	{
-		if (create)
-		{
-			m_Records.emplace(key, std::make_unique<PluginFactoryEntityRecord_t>(pEntity));
-		}
-		else
-		{
-			return nullptr;
-		}
+		auto& handle = it->second->m_hEntity;
+		const CBaseHandle& current = pEntity->GetRefEHandle();
+		if (!handle.IsValid())
+			handle = pEntity;
+		if (static_cast<const CBaseHandle&>(handle) == current)
+			return it->second.get();
 	}
 
-	return m_Records[key].get();
+	if (!create)
+		return nullptr;
+
+	auto result = m_Records.insert_or_assign(pEntity, std::make_unique<PluginFactoryEntityRecord_t>(pEntity));
+	return result.first->second.get();
 }
 
 void CPluginEntityFactories::RemoveRecord(CBaseEntity* pEntity)
 {
-	if (!pEntity)
-	{
-		return;
-	}
-
-	cell_t key = (cell_t)pEntity;
-	m_Records.erase(key);
+	m_Records.erase(pEntity);
 }
 
 CPluginEntityFactory* CPluginEntityFactories::GetFactory(CBaseEntity* pEntity)
@@ -502,7 +497,7 @@ void CPluginEntityFactories::Hook_EntityDestructor( unsigned int flags )
 	RETURN_META(MRES_IGNORED);
 }
 
-void PluginFactoryEntityRecord_t::Hook(bool bHookDestructor)
+void PluginFactoryEntityRecord_t::Hook(CBaseEntity* pEntity, bool bHookDestructor)
 {
 	if (m_bHooked)
 	{
@@ -702,20 +697,19 @@ void CPluginEntityFactory::OnDestroy( CBaseEntity* pEntity )
 	}
 }
 
-void CPluginEntityFactories::GetEntitiesOfFactory(CPluginEntityFactory* pFactory, CUtlVector< CBaseEntity* > &vector)
+void CPluginEntityFactories::GetEntitiesOfFactory(CPluginEntityFactory* pFactory, CUtlVector<EHANDLE>& entities)
 {
-	for (auto it = m_Records.begin(); it != m_Records.end(); it++)
+	for (const auto& entry : m_Records)
 	{
-		if (it->second->pFactory == pFactory)
-		{
-			vector.AddToTail(it->second->pEntity);
-		}
+		const auto& record = entry.second;
+		if (record->pFactory == pFactory)
+			entities.AddToTail(record->m_hEntity);
 	}
 }
 
-void CPluginEntityFactory::GetEntities( CUtlVector< CBaseEntity* > &vector )
+void CPluginEntityFactory::GetEntities(CUtlVector<EHANDLE>& entities)
 {
-	g_pPluginEntityFactories->GetEntitiesOfFactory( this, vector );
+	g_pPluginEntityFactories->GetEntitiesOfFactory(this, entities);
 }
 
 bool CPluginEntityFactory::Install()
@@ -792,13 +786,14 @@ void CPluginEntityFactory::Uninstall()
 
 void CPluginEntityFactory::RemoveAllEntities()
 {
-	CUtlVector< CBaseEntity* > entities;
-	GetEntities( entities );
+	CUtlVector<EHANDLE> entities;
+	GetEntities(entities);
 
 	for (int i = 0; i < entities.Count(); i++)
 	{
-		CBaseEntity* pEntity = reinterpret_cast< CBaseEntity* >( entities[i] );
-		servertools->RemoveEntityImmediate( pEntity );
+		// Removal callbacks can delete other entities from this snapshot.
+		if (CBaseEntity* entity = entities[i].Get())
+			servertools->RemoveEntityImmediate(entity);
 	}
 }
 
@@ -990,10 +985,10 @@ IServerNetworkable* CPluginEntityFactory::RecursiveCreate(const char* classname,
 				{
 					if (nextBotFactory->IsRunnable())
 					{
-						nextBotFactory->PushCell(PtrToPawnAddress(pEnt));
+						nextBotFactory->PushInt64(reinterpret_cast<uintptr_t>(pEnt));
 						cell_t address = 0;
 						nextBotFactory->Execute(&address);
-						createdBot = (INextBot*)PawnAddressToPtr(address);
+						createdBot = (INextBot*)PawnTokenToPtr(address);
 					}
 				}
 				else
@@ -1019,7 +1014,7 @@ IServerNetworkable* CPluginEntityFactory::RecursiveCreate(const char* classname,
 
 		if (bIsInstantiating)
 		{
-			pEntityRecord->Hook(bHookDestructor);
+			pEntityRecord->Hook(pEnt, bHookDestructor);
 		}
 
 		if (m_pPostConstructor && m_pPostConstructor->IsRunnable())

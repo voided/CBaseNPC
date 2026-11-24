@@ -38,7 +38,7 @@ cell_t CPluginEntityFactory_Ctor(IPluginContext * context, const cell_t * params
 		return context->ThrowNativeError("Entity factory must have a classname");
 	}
 
-	IPlugin* plugin = plsys->FindPluginByContext( context->GetContext() );
+	IPlugin* plugin = plsys->FindPluginByContext(context);
 	IPluginFunction *postConstructor = context->GetFunctionById(params[2]);
 	IPluginFunction *onRemove = context->GetFunctionById(params[3]);
 
@@ -409,6 +409,9 @@ cell_t DefineInputFunc(IPluginContext* context, const cell_t* params) {
 
 	cell_t handlerType = params[3];
 	IPluginFunction *handlerFunc = context->GetFunctionById(params[4]);
+	if (!handlerFunc) {
+		return context->ThrowNativeError("Invalid callback for entity input '%s'", keyName);
+	}
 
 	fieldtype_t fieldType;
 	switch (handlerType) {
@@ -422,13 +425,10 @@ cell_t DefineInputFunc(IPluginContext* context, const cell_t* params) {
 		default: fieldType = FIELD_CUSTOM; break;
 	}
 
-	int fieldNameSize = strlen(keyName) + 7;
-	char* fieldName = new char[fieldNameSize];
-	snprintf(fieldName, fieldNameSize, "Input%s", keyName);
-
-	factory->DefineInputFunc(fieldName, fieldType, keyName, factory->CreateInputFuncDelegate(handlerFunc, fieldType) );
-
-	delete[] fieldName;
+	const std::string fieldName = std::string("Input") + keyName;
+	if (!factory->DefineInputFunc(fieldName.c_str(), fieldType, keyName, factory->CreateInputFuncDelegate(handlerFunc, fieldType))) {
+		return context->ThrowNativeError("Failed to create a closure for entity input '%s'", keyName);
+	}
 	return params[1];
 }
 

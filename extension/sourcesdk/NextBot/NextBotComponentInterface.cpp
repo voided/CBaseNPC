@@ -1,5 +1,6 @@
 #include "sourcesdk/NextBot/NextBotComponentInterface.h"
 #include "sourcesdk/NextBot/NextBotInterface.h"
+#include "pawn_tokens.h"
 
 ConVar* NextBotStop = nullptr;
 
@@ -30,4 +31,9 @@ INextBotComponent::INextBotComponent(INextBot *bot)
 	m_lastUpdateTime = 0;
 	m_bot = bot;
 	bot->RegisterComponent( this );
+}
+
+INextBotComponent::~INextBotComponent()
+{
+	ForgetPawnToken(this);
 }

@@ -128,12 +128,12 @@ cell_t SequenceDuration(IPluginContext* context, const cell_t* params) {
 }
 
 cell_t GetModelPtr(IPluginContext* context, const cell_t* params) {
-	auto entity = Get(context, params[1]);
+	auto entity = Get(context, params[2]);
 	if (!entity) {
 		return 0;
 	}
 
-	return PtrToPawnAddress(entity->GetModelPtr());
+	return WritePawnAddress(context, params[1], entity->GetModelPtr());
 }
 
 cell_t LookupPoseParameter(IPluginContext* context, const cell_t* params) {

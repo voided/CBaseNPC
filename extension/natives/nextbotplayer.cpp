@@ -1,4 +1,5 @@
 #include "NextBotInterface.h"
+#include "pawn_tokens.h"
 #include "toolsnextbot.h"
 
 #include "natives.hpp"
@@ -7,7 +8,7 @@ namespace natives::nextbotplayer {
 
 template<typename T>
 inline T* Get(IPluginContext* context, const cell_t param) {	
-	T* bot = (T*)PawnAddressToPtr(param);
+	T* bot = (T*)PawnTokenToPtr(param);
 	if (!bot) {
 		context->ThrowNativeError("Botplayer is a null ptr!");
 		return nullptr;
@@ -16,12 +17,12 @@ inline T* Get(IPluginContext* context, const cell_t param) {
 }
 
 cell_t ToolsNextBotPlayer(IPluginContext* context, const cell_t* params) {
-	CBaseCombatCharacter* entity = (CBaseCombatCharacter*)PawnAddressToPtr(params[1]);
+	CBaseCombatCharacter* entity = static_cast<CBaseCombatCharacter*>(ReadPawnAddress(context, params[1]));
 	if (!entity) {
 		return context->ThrowNativeError("Invalid entity address %x", params[1]);
 	}
 
-	return PtrToPawnAddress(new class ToolsNextBotPlayer(entity));
+	return BotToPawnToken(new class ToolsNextBotPlayer(entity), entity, false);
 }
 
 cell_t SetIsDormantWhenDead(IPluginContext* context, const cell_t* params) {

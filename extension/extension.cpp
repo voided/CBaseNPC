@@ -3,6 +3,7 @@
 #include "extension.h"
 #include <CDetour/detours.h>
 #include "helpers.h"
+#include "pawn_tokens.h"
 #include "sourcesdk/nav_mesh.h"
 #include "sourcesdk/tf_gamerules.h"
 #include "sourcesdk/basetoggle.h"
@@ -31,7 +32,6 @@ IServerTools* servertools = nullptr;
 IMDLCache* mdlcache = nullptr;
 CSharedEdictChangeInfo* g_pSharedChangeInfo = nullptr;
 IStaticPropMgrServer* staticpropmgr = nullptr;
-ConVar* sourcemod_version = nullptr;
 IBaseNPC_Tools* g_pBaseNPCTools = new BaseNPC_Tools_API;
 std::vector<sp_nativeinfo_t> gNatives;
 
@@ -133,7 +133,6 @@ bool CBaseNPCExt::SDK_OnMetamodLoad(ISmmAPI *ismm, char *error, size_t maxlen, b
 
 	ConVar_Register(0, this);
 
-	sourcemod_version = g_pCVar->FindVar("sourcemod_version");
 
 	g_cvDeveloper = g_pCVar->FindVar("developer");
 
@@ -170,6 +169,7 @@ void CBaseNPCExt::OnCoreMapEnd() {
 	g_pBaseNPCPluginActionFactories->OnCoreMapEnd();
 	g_pPluginEntityFactories->OnCoreMapEnd();
 	CNavMesh::OnCoreMapEnd();
+	ClearMapPawnTokens();
 }
 
 void CBaseNPCExt::OnEntityCreated(CBaseEntity* pEntity, const char* classname) {
@@ -180,6 +180,7 @@ void CBaseNPCExt::OnEntityDestroyed(CBaseEntity* pEntity) {
 		return;
 	}
 
+	ForgetEntityPawnTokens(pEntity);
 	g_pBaseNPCTools->DeleteNPCByEntIndex(gamehelpers->EntityToBCompatRef(pEntity));
 
 	auto iIndex = g_EntitiesHooks.Find(gamehelpers->EntityToReference(pEntity));
@@ -209,6 +210,9 @@ struct HandleSystemHack {
 };
 
 void CBaseNPCExt::SDK_OnAllLoaded() {
+#ifdef KE_ARCH_X64
+	g_pSM->AddGameFrameHook(&AdvancePawnTokenFrame);
+#endif
 	SM_GET_LATE_IFACE(BINTOOLS, g_pBinTools);
 	SM_GET_LATE_IFACE(SDKTOOLS, g_pSDKTools);
 	SM_GET_LATE_IFACE(SDKHOOKS, g_pSDKHooks);
@@ -285,6 +289,9 @@ void CBaseNPCExt::NotifyInterfaceDrop(SMInterface* interface) {
 }
 
 void CBaseNPCExt::SDK_OnUnload() {
+#ifdef KE_ARCH_X64
+	g_pSM->RemoveGameFrameHook(&AdvancePawnTokenFrame);
+#endif
 	gameconfs->CloseGameConfigFile(g_pGameConf);
 	forwards->ReleaseForward(g_pForwardEventKilled);
 

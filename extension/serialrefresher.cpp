@@ -92,20 +92,18 @@ bool Tools_Refresh_Init(SourceMod::IGameConfig* config, char* error, size_t maxl
 	add_explicit_delete.Init(addr);
 
 	void* manager = nullptr;
-	if (!config->GetMemSig("framesnapshotmanager", reinterpret_cast<void**>(&manager)) || manager == nullptr) {
-		snprintf(error, maxlength, "Failed to get framesnapshotmanager signature");
+	if (!GetEngineAddress(config, "framesnapshotmanager", &manager)) {
+		snprintf(error, maxlength, "Failed to resolve framesnapshotmanager address");
 		return false;
 	}
 
-	int offset = 0;
-	if (config->GetOffset("framesnapshotmanager", &offset)) {
-		if (offset == 0) {
-			snprintf(error, maxlength, "Failed to get framesnapshotmanager offset!");
-			return false;
-		}
-		gFrameSnapshot = reinterpret_cast<CFrameSnapshotManager*>(*reinterpret_cast<std::uint8_t**>(reinterpret_cast<std::uint8_t*>(manager) + offset) + 0x4);
+	// A direct address refers to the storage for the manager pointer. The
+	// Windows x86 instruction stores an absolute pointer to the object itself.
+	int offset;
+	if (config->GetOffset("framesnapshotmanager::object", &offset)) {
+		gFrameSnapshot = reinterpret_cast<CFrameSnapshotManager*>(static_cast<uint8_t*>(manager) + offset);
 	} else {
-		gFrameSnapshot = *reinterpret_cast<CFrameSnapshotManager**>(manager);
+		gFrameSnapshot = *static_cast<CFrameSnapshotManager**>(manager);
 	}
 
 	g_pSM->AddGameFrameHook(&Hook_Frame);

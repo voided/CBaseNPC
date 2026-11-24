@@ -1,4 +1,5 @@
 #include <ehandle.h>
+#include "pawn_tokens.h"
 #include <isaverestore.h>
 
 #define protected_old protected
@@ -18,7 +19,7 @@ namespace natives::takedamageinfo {
 CTakeDamageInfo g_GlobalDamageInfo;
 
 inline CTakeDamageInfo* Get(IPluginContext* context, const cell_t param) {
-	CTakeDamageInfo* info = (CTakeDamageInfo*)PawnAddressToPtr(param);
+	CTakeDamageInfo* info = (CTakeDamageInfo*)PawnTokenToPtr(param);
 	if (!info) {
 		context->ThrowNativeError("CTakeDamageInfo is a null ptr!");
 		return nullptr;
@@ -27,11 +28,11 @@ inline CTakeDamageInfo* Get(IPluginContext* context, const cell_t param) {
 }
 
 cell_t CTakeDamageInfo_Ctor(IPluginContext* context, const cell_t* params) {
-	return PtrToPawnAddress(PawnAddressToPtr(params[1]));
+	return PtrToPawnToken(ReadPawnAddress(context, params[1]));
 }
 
 cell_t GetGlobalDamageInfo(IPluginContext* context, const cell_t* params) {
-	return PtrToPawnAddress(&g_GlobalDamageInfo);
+	return PtrToPawnToken(&g_GlobalDamageInfo, PawnTokenLifetime::Owned);
 }
 
 cell_t Init(IPluginContext* context, const cell_t* params) {

@@ -1,4 +1,5 @@
 #include "NextBotInterface.h"
+#include "pawn_tokens.h"
 #include "toolsnextbot.h"
 
 #include "nextbot.hpp"
@@ -15,7 +16,7 @@ namespace natives::nextbot {
 
 template<typename T>
 inline T* Get(IPluginContext* context, const cell_t param) {	
-	T* bot = (T*)PawnAddressToPtr(param);
+	T* bot = (T*)PawnTokenToPtr(param);
 	if (!bot) {
 		context->ThrowNativeError("Bot is a null ptr!");
 		return nullptr;
@@ -79,7 +80,7 @@ cell_t GetLocomotionInterface(IPluginContext* context, const cell_t* params) {
 	if (!bot) {
 		return 0;
 	}
-	return PtrToPawnAddress(bot->GetLocomotionInterface());
+	return BotMemberToPawnToken(bot, bot->GetEntity(), bot->GetLocomotionInterface(), &INextBot::GetLocomotionInterface);
 }
 
 cell_t GetBodyInterface(IPluginContext* context, const cell_t* params) {
@@ -87,7 +88,7 @@ cell_t GetBodyInterface(IPluginContext* context, const cell_t* params) {
 	if (!bot) {
 		return 0;
 	}
-	return PtrToPawnAddress(bot->GetBodyInterface());
+	return BotMemberToPawnToken(bot, bot->GetEntity(), bot->GetBodyInterface(), &INextBot::GetBodyInterface);
 }
 
 cell_t GetIntentionInterface(IPluginContext* context, const cell_t* params) {
@@ -95,7 +96,7 @@ cell_t GetIntentionInterface(IPluginContext* context, const cell_t* params) {
 	if (!bot) {
 		return 0;
 	}
-	return PtrToPawnAddress(bot->GetIntentionInterface());
+	return BotMemberToPawnToken(bot, bot->GetEntity(), bot->GetIntentionInterface(), &INextBot::GetIntentionInterface);
 }
 
 cell_t GetVisionInterface(IPluginContext* context, const cell_t* params) {
@@ -103,7 +104,7 @@ cell_t GetVisionInterface(IPluginContext* context, const cell_t* params) {
 	if (!bot) {
 		return 0;
 	}
-	return PtrToPawnAddress(bot->GetVisionInterface());
+	return BotMemberToPawnToken(bot, bot->GetEntity(), bot->GetVisionInterface(), &INextBot::GetVisionInterface);
 }
 
 cell_t SetPosition(IPluginContext* context, const cell_t* params) {
@@ -274,7 +275,16 @@ cell_t GetCurrentPath(IPluginContext* context, const cell_t* params) {
 		return 0;
 	}
 
-	return PtrToPawnAddress(bot->GetCurrentPath());
+	const auto* path = bot->GetCurrentPath();
+#ifdef KE_ARCH_X64
+	const auto parent = BotToPawnToken(bot, bot->GetEntity());
+	return BorrowPawnToken(path, [parent, path] {
+		auto* live = static_cast<INextBot*>(PawnTokenToPtr(parent));
+		return live && live->GetCurrentPath() == path;
+	});
+#else
+	return PtrToPawnToken(path);
+#endif
 }
 
 cell_t SetCurrentPath(IPluginContext* context, const cell_t* params) {
@@ -283,7 +293,7 @@ cell_t SetCurrentPath(IPluginContext* context, const cell_t* params) {
 		return 0;
 	}
 
-	bot->SetCurrentPath((PathFollower*)PawnAddressToPtr(params[2]));
+	bot->SetCurrentPath((PathFollower*)PawnTokenToPtr(params[2]));
 	return 0;
 }
 
@@ -293,7 +303,7 @@ cell_t NotifyPathDestruction(IPluginContext* context, const cell_t* params) {
 		return 0;
 	}
 
-	bot->NotifyPathDestruction((PathFollower*)PawnAddressToPtr(params[2]));
+	bot->NotifyPathDestruction((PathFollower*)PawnTokenToPtr(params[2]));
 	return 0;
 }
 
@@ -454,12 +464,12 @@ cell_t DisplayDebugText(IPluginContext* context, const cell_t* params) {
 }
 
 cell_t ToolsNextBot(IPluginContext* context, const cell_t* params) {
-	CBaseCombatCharacter* entity = (CBaseCombatCharacter*)PawnAddressToPtr(params[1]);
+	CBaseCombatCharacter* entity = static_cast<CBaseCombatCharacter*>(ReadPawnAddress(context, params[1]));
 	if (!entity) {
 		return context->ThrowNativeError("Invalid entity address %x", params[1]);
 	}
 
-	return PtrToPawnAddress(new class ToolsNextBot(entity));
+	return BotToPawnToken(new class ToolsNextBot(entity), entity, false);
 }	
 
 void setup(std::vector<sp_nativeinfo_t>& natives) {

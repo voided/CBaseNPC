@@ -32,7 +32,7 @@ public:
 	static bool Init(SourceMod::IGameConfig* config, char* error, size_t maxlength);
 
 	INextBotComponent(INextBot *bot);
-	virtual ~INextBotComponent() { };
+	virtual ~INextBotComponent();
 
 	virtual void Reset(void) 
 	{ 

@@ -4,6 +4,7 @@
 #include <vector>
 #include <memory>
 
+#include <ehandle.h>
 #include <itoolentity.h>
 #include <tier0/platform.h>
 #include <IEngineTrace.h>
@@ -30,16 +31,16 @@ enum PluginEntityFactoryBaseClass_t
 class PluginFactoryEntityRecord_t
 {
 public:
-	CBaseEntity* pEntity = nullptr;
+	EHANDLE m_hEntity;
 	CPluginEntityFactory* pFactory = nullptr;
 	datamap_t* m_pDataMap = nullptr;
 	INextBot* m_pNextBot = nullptr;
 	CBaseNPCPluginActionFactory* m_pInitialActionFactory = nullptr;
 	CBaseNPCIntention* m_pIntentionInterface = nullptr;
 
-	void Hook(bool bHookDestructor = true);
+	void Hook(CBaseEntity* pEntity, bool bHookDestructor);
 
-	PluginFactoryEntityRecord_t( CBaseEntity* pEnt ) : pEntity(pEnt) { }
+	PluginFactoryEntityRecord_t( CBaseEntity* pEnt ) : m_hEntity(pEnt) { }
 	~PluginFactoryEntityRecord_t();
 
 	datamap_t* Hook_GetDataDescMap();
@@ -79,7 +80,7 @@ public:
 
 	PluginFactoryEntityRecord_t* FindRecord( CBaseEntity* pEntity, bool create=false );
 	void RemoveRecord( CBaseEntity* pEntity );
-	void GetEntitiesOfFactory( CPluginEntityFactory* pFactory, CUtlVector< CBaseEntity* > &vector );
+	void GetEntitiesOfFactory( CPluginEntityFactory* pFactory, CUtlVector<EHANDLE>& entities );
 	CPluginEntityFactory* ToPluginEntityFactory( IEntityFactory* pFactory );
 
 	size_t GetBaseClassSize( PluginEntityFactoryBaseClass_t classType ) const { 
@@ -119,7 +120,8 @@ private:
 
 	size_t m_BaseClassSizes[ FACTORYBASECLASS_MAX ];
 	CUtlVector< CPluginEntityFactory* > m_Factories;
-	std::map<cell_t, std::unique_ptr<PluginFactoryEntityRecord_t>> m_Records;
+	// Destruction hooks use the live receiver as a key. Store an EHANDLE for later access.
+	std::map<CBaseEntity*, std::unique_ptr<PluginFactoryEntityRecord_t>> m_Records;
 	std::map<std::string, IEntityFactory*> m_gameFactories;
 	std::map<std::string, CPluginEntityFactory*> m_pluginFactories;
 	std::vector<int> m_hookIds;
@@ -241,7 +243,7 @@ public:
 
 	// Collects all entities that were created by this factory.
 	// This does not include entities that are created by factories that derive from this one.
-	void GetEntities( CUtlVector< CBaseEntity* > &vector );
+	void GetEntities( CUtlVector<EHANDLE>& entities );
 
 	void RemoveAllEntities();
 

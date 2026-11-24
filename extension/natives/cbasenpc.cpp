@@ -1,4 +1,5 @@
 #include "shared/cbasenpc.h"
+#include "pawn_tokens.h"
 #include "cbasenpc_internal.h"
 #include "npc_tools_internal.h"
 #include "cbasenpc.hpp"
@@ -47,7 +48,7 @@ void setup(std::vector<sp_nativeinfo_t>& natives) {
 namespace locomotion {
 
 inline CBaseNPC_Locomotion* Get(IPluginContext* context, const cell_t param) {	
-	CBaseNPC_Locomotion* mover = (CBaseNPC_Locomotion*)PawnAddressToPtr(param);
+	CBaseNPC_Locomotion* mover = (CBaseNPC_Locomotion*)PawnTokenToPtr(param);
 	if (!mover) {
 		context->ThrowNativeError("Invalid Locomotion %i", param);
 		return nullptr;
@@ -261,7 +262,7 @@ cell_t GetBot(IPluginContext* context, const cell_t* params) {
 		return 0;
 	}
 
-	return PtrToPawnAddress(npc->GetEntity()->MyNextBotPointer());
+	return BotToPawnToken(npc->GetEntity()->MyNextBotPointer(), npc->GetEntity());
 }
 
 cell_t GetLocomotion(IPluginContext* context, const cell_t* params) {
@@ -270,7 +271,9 @@ cell_t GetLocomotion(IPluginContext* context, const cell_t* params) {
 		return 0;
 	}
 
-	return PtrToPawnAddress(npc->m_pMover);
+	auto* entity = npc->GetEntity();
+	auto* bot = entity->MyNextBotPointer();
+	return BotMemberToPawnToken(bot, entity, static_cast<ILocomotion*>(npc->m_pMover), &INextBot::GetLocomotionInterface);
 }
 
 cell_t GetBody(IPluginContext* context, const cell_t* params) {
@@ -279,7 +282,9 @@ cell_t GetBody(IPluginContext* context, const cell_t* params) {
 		return 0;
 	}
 
-	return PtrToPawnAddress(npc->m_pBody);
+	auto* entity = npc->GetEntity();
+	auto* bot = entity->MyNextBotPointer();
+	return BotMemberToPawnToken(bot, entity, static_cast<IBody*>(npc->m_pBody), &INextBot::GetBodyInterface);
 }
 
 cell_t GetVision(IPluginContext* context, const cell_t* params) {
@@ -288,7 +293,9 @@ cell_t GetVision(IPluginContext* context, const cell_t* params) {
 		return 0;
 	}
 
-	return PtrToPawnAddress(npc->GetEntity()->MyNextBotPointer()->GetVisionInterface());
+	auto* entity = npc->GetEntity();
+	auto* bot = entity->MyNextBotPointer();
+	return BotMemberToPawnToken(bot, entity, bot->GetVisionInterface(), &INextBot::GetVisionInterface);
 }
 
 cell_t GetIntention(IPluginContext* context, const cell_t* params) {
@@ -297,7 +304,9 @@ cell_t GetIntention(IPluginContext* context, const cell_t* params) {
 		return 0;
 	}
 
-	return PtrToPawnAddress(npc->GetEntity()->MyNextBotPointer()->GetIntentionInterface());
+	auto* entity = npc->GetEntity();
+	auto* bot = entity->MyNextBotPointer();
+	return BotMemberToPawnToken(bot, entity, bot->GetIntentionInterface(), &INextBot::GetIntentionInterface);
 }
 
 cell_t SetType(IPluginContext* context, const cell_t* params) {

@@ -148,21 +148,10 @@ inline void VectorToPawnVector(cell_t* angAddr, const QAngle* angle)
 	angAddr[2] = sp_ftoc(angle->z);
 }
 
-inline cell_t PtrToPawnAddress(const void* ptr) {
-#ifdef KE_ARCH_X64
-	return g_pSM->ToPseudoAddress(ptr);
-#else
-	return (cell_t)ptr;
-#endif
-}
-
-inline void* PawnAddressToPtr(cell_t addr) {
-#ifdef KE_ARCH_X64
-	return (void*)g_pSM->FromPseudoAddress(param);
-#else
-	return (void*)addr;
-#endif
-}
+// Native int64 arguments and results use a VM address to two cells. A result
+// destination is the first native argument, before any declared arguments.
+void* ReadPawnAddress(IPluginContext* context, cell_t local);
+cell_t WritePawnAddress(IPluginContext* context, cell_t local, const void* ptr);
 
 #if SOURCEPAWN_API_VERSION >= 0x0211
 void MatrixToPawnMatrix(IPluginContext* context, cell_t* matAddr, const matrix3x4_t& mat);
@@ -174,7 +163,7 @@ void PawnMatrixToMatrix(IPluginContext* context, cell_t* matAddr, matrix3x4_t& m
 
 const char *HandleErrorToString(HandleError err);
 
-IPluginFunction *GetFunctionByNameEx(IPluginContext *pContext, const char *name);
+bool GetEngineAddress(IGameConfig* config, const char* name, void** address);
 
 string_t AllocPooledString(const char *pszValue);
 
@@ -193,7 +182,7 @@ public:
 			throw std::runtime_error(error + name);
 		}
 #ifdef DEBUG
-		g_pSM->LogMessage(myself, "FCall<%s> Got addr 0x%08X!", name, (void*)func);
+		g_pSM->LogMessage(myself, "FCall<%s> Got addr %p!", name, (void*)func);
 #endif
 	}
 
@@ -332,7 +321,7 @@ public:
 			throw std::runtime_error(error + name);
 		}
 #ifdef DEBUG
-		g_pSM->LogMessage(myself, "MCall<%s> Got addr 0x%08X!", name, func);
+		g_pSM->LogMessage(myself, "MCall<%s> Got addr %p!", name, func);
 #endif
 	}
 

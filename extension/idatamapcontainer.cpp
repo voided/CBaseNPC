@@ -1,15 +1,9 @@
 
 #include "idatamapcontainer.h"
 #include "helpers.h"
-#include "sh_pagealloc.h"
+#include <cstring>
+#include <memory>
 #include "baseentityoutput.h"
-
-// For datamap cache deletion hacking purposes
-#include <am-hashmap.h>
-#include <sm_namehashset.h>
-#include <sh_stack.h>
-
-extern ConVar* sourcemod_version;
 
 IDataMapContainer::IDataMapContainer()
 {
@@ -111,9 +105,9 @@ int g_DataMapDescFieldSizes[] = {
 	sizeof(int),			// FIELD_COLOR32
 	0,						// FIELD_EMBEDDED
 	0,						// FIELD_CUSTOM
-	sizeof(int),			// FIELD_CLASSPTR
+	sizeof(CBaseEntity*), // FIELD_CLASSPTR
 	sizeof(int),			// FIELD_EHANDLE
-	sizeof(int),			// FIELD_EDICT
+	sizeof(edict_t*),		// FIELD_EDICT
 	3 * sizeof(float),		// FIELD_POSITION_VECTOR
 	sizeof(float),			// FIELD_TIME
 	sizeof(int),			// FIELD_TICK
@@ -758,97 +752,59 @@ bool IDataMapContainer::GetObjectDataEx(void* obj, const char* prop, char** data
 	return false;
 }
 
-SourceHook::CPageAlloc g_InputFuncAlloc;
-
-IEntityDataMapInputFuncDelegate::IEntityDataMapInputFuncDelegate()
+namespace
 {
-	m_pInputFuncPtr = nullptr;
+struct EntityInputCallInterface
+{
+	ffi_cif cif;
+	ffi_type* args[2] = { &ffi_type_pointer, &ffi_type_pointer };
 
-	Alloc();
+	// The engine passes the receiver and the address of the inputdata_t reference.
+#if defined(_WIN32) && defined(_M_IX86)
+	static constexpr ffi_abi abi = FFI_THISCALL;
+#else
+	static constexpr ffi_abi abi = FFI_DEFAULT_ABI;
+#endif
+	const ffi_status status = ffi_prep_cif(&cif, abi, 2, &ffi_type_void, args);
+};
 }
 
-void IEntityDataMapInputFuncDelegate::Alloc()
+bool IEntityDataMapInputFuncDelegate::Prepare(inputfunc_t& inputFunc)
 {
-	if (m_pInputFuncPtr)
-		return;
+	static EntityInputCallInterface call;
+	if (call.status != FFI_OK)
+		return false;
 
-	uint32_t thisAddr = (uint32_t)this;
-	uint32_t callFuncAddr = (uint32_t)(&IEntityDataMapInputFuncDelegate::HandleInput);
+	void* code = nullptr;
+	m_pClosure = static_cast<ffi_closure*>(ffi_closure_alloc(sizeof(ffi_closure), &code));
+	if (!m_pClosure || ffi_prep_closure_loc(m_pClosure, &call.cif, HandleInput, this, code) != FFI_OK)
+		return false;
 
-	uint8_t funcBytes[] = { 
-#ifdef WIN32
-		// MSVC __thiscall
-		0x55,									// push ebp
-		0x89, 0xe5,								// mov ebp, esp
-		0x57,									// push edi
-		0x51,									// push ecx
-		0x8B, 0x7D, 0x08,						// mov edi, [ebp+8] (inputdata_t*)
-		0x57,									// push edi
-		0x51,									// push ecx (CBaseEntity*)
-		0x68, 0, 0, 0, 0,						// push thisAddr
-		0xBA, 0, 0, 0, 0, 						// mov edx, callFuncAddr
-		0xFF, 0xD2,								// call edx
-		0x83, 0xC4, 0x0C,						// add esp,12
-		0x59,									// pop ecx
-		0x5f,									// pop edi
-		0x89, 0xec,								// mov esp, ebp
-		0x5d,									// pop ebp
-		0xc2, 0x04, 0x00						// ret 4
+#ifdef _MSC_VER
+	// CBaseEntity uses the MSVC single-inheritance member pointer layout.
+	static_assert(sizeof(inputFunc) == sizeof(code));
+	std::memcpy(&inputFunc, &code, sizeof(inputFunc));
 #else
-		// GCC __thiscall
-		0x55,									// push ebp
-		0x89, 0xE5,								// mov ebp, esp
-		0x52,									// push edx
-		0x57,									// push edi
-		0x8B, 0x7D, 0x0C,						// mov edi, [ebp+12] (inputdata_t*)
-		0x57,									// push edi
-		0x8B, 0x7D, 0x08,						// mov edi, [ebp+8] (CBaseEntity*)
-		0x57,									// push edi
-		0x68, 0, 0, 0, 0,						// push thisAddr
-		0xBA, 0, 0, 0, 0,						// mov edx, callFuncAddr
-		0xFF, 0xD2,								// call edx
-		0x83, 0xC4, 0x0C,						// add esp,12
-		0x5A,									// pop edi
-		0x5F,									// pop edx
-		0x89, 0xEC,								// mov esp, ebp
-		0x5D,									// pop ebp
-		0xC3									// ret
+	// The Itanium ABI also stores the adjustment to apply to the receiver.
+	const struct { void* code; intptr_t adjustment; } member = { code, 0 };
+	static_assert(sizeof(inputFunc) == sizeof(member));
+	std::memcpy(&inputFunc, &member, sizeof(inputFunc));
 #endif
-	};
-
-	m_iInputFuncSize = sizeof(funcBytes);
-	m_pInputFuncPtr = g_InputFuncAlloc.Alloc(m_iInputFuncSize);
-
-	if (m_pInputFuncPtr)
-	{
-		g_InputFuncAlloc.SetRW(m_pInputFuncPtr);
-
-#ifdef WIN32
-		*((uint32_t*)(&funcBytes[11])) = thisAddr;
-		*((uint32_t*)(&funcBytes[16])) = callFuncAddr;
-#else
-		*((uint32_t*)(&funcBytes[14])) = thisAddr;
-		*((uint32_t*)(&funcBytes[19])) = callFuncAddr;
-#endif
-
-		memcpy(m_pInputFuncPtr, funcBytes, m_iInputFuncSize);
-
-		g_InputFuncAlloc.SetRE(m_pInputFuncPtr);
-	}
+	return true;
 }
 
-void IEntityDataMapInputFuncDelegate::Free()
+void IEntityDataMapInputFuncDelegate::HandleInput(ffi_cif*, void*, void** args, void* userData)
 {
-	if (!m_pInputFuncPtr)
-		return;
-	
-	g_InputFuncAlloc.Free(m_pInputFuncPtr);
-	m_pInputFuncPtr = nullptr;
+	auto* delegate = static_cast<IEntityDataMapInputFuncDelegate*>(userData);
+	auto* entity = *static_cast<CBaseEntity**>(args[0]);
+	auto* data = *static_cast<inputdata_t**>(args[1]);
+	delegate->OnInput(entity, *data);
 }
 
 IEntityDataMapInputFuncDelegate::~IEntityDataMapInputFuncDelegate()
 {
-	Free();
+	if (m_pClosure)
+		ffi_closure_free(m_pClosure);
 }
 
 void IEntityDataMapContainer::DestroyDataDesc()
@@ -858,96 +814,11 @@ void IEntityDataMapContainer::DestroyDataDesc()
 	m_pEntityInputFuncDelegates.PurgeAndDeleteElements();
 }
 
-// https://github.com/alliedmodders/sourcemod/blob/38eecd5ece26b2469560db1822511a7e2685286e/core/HalfLife2.h#L263
-struct CHalfLife2
-{
-	struct DataMapCacheInfo12
-	{
-		static inline bool matches(const char *name, const DataMapCacheInfo12 &info)
-		{
-			return strcmp(name, info.name.c_str()) == 0;
-		}
-		static inline uint32_t hash(const detail::CharsAndLength &key)
-		{
-			return key.hash();
-		}
-
-		DataMapCacheInfo12()
-			: name(), info{nullptr, 0}
-		{
-		}
-
-		std::string name;
-		sm_datatable_info_t info;
-	};
-	typedef NameHashSet<DataMapCacheInfo12> DataMapCache12;
-
-	struct DataMapCachePolicy11
-	{
-		static inline bool matches(const char *name, const sm_datatable_info_t &info)
-		{
-			return strcmp(name, info.prop->fieldName) == 0;
-		}
-		static inline uint32_t hash(const detail::CharsAndLength &key)
-		{
-			return key.hash();
-		}
-	};
-	typedef NameHashSet<sm_datatable_info_t, DataMapCachePolicy11> DataMapCache11;
-
-	typedef ke::HashMap<datamap_t *, void *, ke::PointerPolicy<datamap_t> > DataTableMap;
-	typedef ke::HashMap<datamap_t *, DataMapCache11 *, ke::PointerPolicy<datamap_t> > DataTableMap11;
-	typedef ke::HashMap<datamap_t *, DataMapCache12 *, ke::PointerPolicy<datamap_t> > DataTableMap12;
-
-	void** vptr;
-	NameHashSet<void *> m_Classes;
-	DataTableMap m_Maps;
-};
-
 void IEntityDataMapContainer::DestroyDataDescMap()
 {
-	if (!m_pDataMap)
-	{
-		return;
-	}
+	if (m_pDataMap)
+		gamehelpers->RemoveDataTableCache(m_pDataMap);
 
-	// HACK: Force gamehelpers (CHalfLife2 *) to delete the cache of our datamap if it exists.
-	CHalfLife2* pHL2 = reinterpret_cast<CHalfLife2*>(gamehelpers);
-
-	const char* value = sourcemod_version->GetString();
-	if (strncmp("1.12.0.", value, 7) == 0)
-	{
-		int rev = std::atoi(&value[7]);
-		if (rev >= 6998)
-		{
-			auto maps12 = (CHalfLife2::DataTableMap12*)(&(pHL2->m_Maps));
-			auto result = maps12->find( m_pDataMap );
-			if (result.found())
-			{
-				auto cache = result->value;
-				if (cache)	
-				{
-					delete cache;
-				}
-
-				maps12->remove( result );
-			}
-			IDataMapContainer::DestroyDataDescMap();
-			return;
-		}
-	}
-
-	auto maps11 = (CHalfLife2::DataTableMap11*)(&(pHL2->m_Maps));
-	auto result = maps11->find( m_pDataMap );
-	if (result.found())
-	{
-		auto cache = result->value;
-		if (cache)	
-		{
-			delete cache;
-		}
-		maps11->remove( result );
-	}
 	IDataMapContainer::DestroyDataDescMap();
 }
 
@@ -961,8 +832,13 @@ void IEntityDataMapContainer::DefineKeyField(const char* name, fieldtype_t field
 	DefineField(name, fieldType, 1, FTYPEDESC_KEY | FTYPEDESC_SAVE, strdup(mapname), 0);
 }
 
-void IEntityDataMapContainer::DefineInputFunc(const char* name, fieldtype_t fieldType, const char* mapname, IEntityDataMapInputFuncDelegate *pDelegate)
+bool IEntityDataMapContainer::DefineInputFunc(const char* name, fieldtype_t fieldType, const char* mapname, IEntityDataMapInputFuncDelegate* pDelegate)
 {
+	std::unique_ptr<IEntityDataMapInputFuncDelegate> delegate(pDelegate);
+	inputfunc_t inputFunc;
+	if (!delegate->Prepare(inputFunc))
+		return false;
+
 	name = name ? strdup(name) : NULL;
 	mapname = mapname ? strdup(mapname) : NULL;
 
@@ -974,19 +850,16 @@ void IEntityDataMapContainer::DefineInputFunc(const char* name, fieldtype_t fiel
 		FTYPEDESC_INPUT,
 		mapname,
 		NULL, 
-		NULL, NULL,
+		inputFunc, NULL,
 		0,
 		NULL,
 		0,
 		0
 	};
 
-	m_pEntityInputFuncDelegates.AddToTail(pDelegate);
-	
-	// this shuts up the compiler
-	*(uint32_t*)(&(typeDesc.inputFunc)) = (uint32_t)pDelegate->m_pInputFuncPtr;
-
+	m_pEntityInputFuncDelegates.AddToTail(delegate.release());
 	m_vecEntityDataTypeDescriptors.AddToTail(typeDesc);
+	return true;
 }
 
 void IEntityDataMapContainer::DefineOutput(const char* name, const char* mapname)

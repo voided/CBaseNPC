@@ -39,7 +39,7 @@ PossibleSDKs = {
 #  'hl2dm':  SDK('HL2SDKHL2DM', '2.hl2dm', '7', 'HL2DM', WinLinuxMac, 'hl2dm'),
 #  'dods': SDK('HL2SDKDODS', '2.dods', '8', 'DODS', WinLinuxMac, 'dods'),
 #  'sdk2013': SDK('HL2SDK2013', '2.sdk2013', '9', 'SDK2013', WinLinuxMac, 'sdk2013'),
-  'tf2':  SDK('HL2SDKTF2', '2.tf2', '11', 'TF2', WinLinuxMac, 'tf2')
+  'tf2':  SDK('HL2SDKTF2', '2.tf2', '11', 'TF2', {'windows': ['x86', 'x86_64'], 'linux': ['x86', 'x86_64']}, 'tf2')
 #  'l4d':  SDK('HL2SDKL4D', '2.l4d', '12', 'LEFT4DEAD', WinLinuxMac, 'l4d'),
 #  'nucleardawn': SDK('HL2SDKND', '2.nd', '13', 'NUCLEARDAWN', WinLinuxMac, 'nucleardawn'),
 #  'l4d2': SDK('HL2SDKL4D2', '2.l4d2', '15', 'LEFT4DEAD2', WinLinuxMac, 'l4d2'),
@@ -102,6 +102,11 @@ class ExtensionConfig(object):
     self.libsafetyhook = {}
 
     if self.build_extension():
+      self.libffi_root = builder.options.libffi_root or ResolveEnvPath('LIBFFI_ROOT', 'libffi')
+      if not self.libffi_root:
+        raise Exception('Set --libffi-root to the directory containing the static libffi installations.')
+      self.libffi_root = Normalize(self.libffi_root)
+
       if builder.options.targets:
         target_archs = builder.options.targets.split(',')
       else:
@@ -307,7 +312,6 @@ class ExtensionConfig(object):
       '-fvisibility-inlines-hidden',
       '-fpermissive'
     ]
-    cxx.linkflags += ['-m32']
 
     have_gcc = cxx.vendor == 'gcc'
     have_clang = cxx.vendor == 'clang'
@@ -369,7 +373,7 @@ class ExtensionConfig(object):
       '/std:c++17'
     ]
     cxx.linkflags += [
-      '/MACHINE:X86',
+      '/MACHINE:X64' if cxx.target.arch == 'x86_64' else '/MACHINE:X86',
       'kernel32.lib',
       'user32.lib',
       'gdi32.lib',
@@ -403,10 +407,38 @@ class ExtensionConfig(object):
     elif cxx.vendor == 'clang':
       cxx.linkflags += ['-lgcc_eh']
     cxx.linkflags += ['-static-libstdc++']
-    cxx.cflags += ["-march=pentium4", "-march=core2", "-msse2", "-mfpmath=sse"]
+    if cxx.target.arch == 'x86':
+      cxx.cflags += ['-march=core2', '-msse2', '-mfpmath=sse']
+    else:
+      cxx.cflags += ['-fPIC']
 
   def configure_windows(self, cxx):
     cxx.defines += ['WIN32', '_WINDOWS']
+
+  def AddLibffi(self, binary):
+    compiler = binary.compiler
+    prefix = os.path.join(self.libffi_root, compiler.target.arch)
+    include = os.path.join(prefix, 'include')
+    if compiler.target.platform == 'windows':
+      archives = ['libffi.lib', 'ffi.lib']
+      if builder.options.debug == '1':
+        prefix = os.path.join(prefix, 'debug')
+      compiler.defines += ['FFI_STATIC_BUILD']
+    else:
+      archives = ['libffi.a']
+
+    for archive in archives:
+      library = os.path.join(prefix, 'lib', archive)
+      if os.path.isfile(library):
+        break
+    else:
+      raise Exception('Could not find a static libffi archive under {}'.format(prefix))
+
+    if not os.path.isfile(os.path.join(include, 'ffi.h')):
+      raise Exception('Could not find ffi.h under {}'.format(include))
+
+    compiler.cxxincludes += [include]
+    compiler.postlink += [library]
 
   def AddCDetour(self, binary):
     binary.sources += [ os.path.join(self.sm_root, 'public', 'CDetour', 'detours.cpp') ]
@@ -498,7 +530,7 @@ class ExtensionConfig(object):
       elif sdk.name in ['sdk2013', 'bms']:
         lib_folder = os.path.join(sdk.path, 'lib', 'public', 'linux32')
       elif compiler.target.arch == 'x86_64':
-        lib_folder = os.path.join(sdk.path, 'lib', 'linux64')
+        lib_folder = os.path.join(sdk.path, 'lib', 'public', 'linux64')
       else:
         lib_folder = os.path.join(sdk.path, 'lib', 'public', 'linux')
     elif compiler.target.platform == 'mac':

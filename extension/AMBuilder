@@ -13,6 +13,7 @@ project.sources = [
   'toolsnav_mesh.cpp',
   'toolsnextbot.cpp',
   'helpers.cpp',
+  'pawn_tokens.cpp',
   'serialrefresher.cpp',
   'sourcesdk/NextBot/Path/NextBotPath.cpp',
   'sourcesdk/NextBot/Path/NextBotPathFollow.cpp',
@@ -80,6 +81,7 @@ for sdk_name in Extension.sdks:
   
     binary = Extension.HL2ExtConfig(project, builder, cxx, 'cbasenpc.ext.' + sdk.ext, sdk)
     Extension.AddCDetour(binary)
+    Extension.AddLibffi(binary)
     binary.compiler.cxxincludes += [
       os.path.join(builder.currentSourcePath, 'sourcesdk'),
       os.path.join(builder.currentSourcePath, 'sourcesdk/NextBot'),

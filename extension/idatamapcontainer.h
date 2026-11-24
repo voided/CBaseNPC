@@ -1,6 +1,7 @@
 #ifndef _DATAMAPHANDLER_H_
 #define _DATAMAPHANDLER_H_
 
+#include <ffi.h>
 #include <itoolentity.h>
 #include <tier0/platform.h>
 #include <IEngineTrace.h>
@@ -122,22 +123,18 @@ protected:
 
 class IEntityDataMapInputFuncDelegate
 {
-protected:
-	void* m_pInputFuncPtr;
-	int m_iInputFuncSize;
-
 public:
-	IEntityDataMapInputFuncDelegate();
+	IEntityDataMapInputFuncDelegate() = default;
+	IEntityDataMapInputFuncDelegate(const IEntityDataMapInputFuncDelegate&) = delete;
+	IEntityDataMapInputFuncDelegate& operator=(const IEntityDataMapInputFuncDelegate&) = delete;
 	virtual ~IEntityDataMapInputFuncDelegate();
-	virtual void Alloc();
-	virtual void Free();
-	virtual void OnInput(CBaseEntity* pEntity, inputdata_t &data)=0;
+	virtual void OnInput(CBaseEntity* pEntity, inputdata_t& data) = 0;
 
 private:
-	static void HandleInput(IEntityDataMapInputFuncDelegate* pDelegate, CBaseEntity* pEntity, inputdata_t &data)
-	{
-		pDelegate->OnInput(pEntity, data);
-	}
+	bool Prepare(inputfunc_t& inputFunc);
+	static void HandleInput(ffi_cif*, void*, void** args, void* userData);
+
+	ffi_closure* m_pClosure = nullptr;
 
 	friend class IEntityDataMapContainer;
 };
@@ -163,7 +160,7 @@ public:
 
 	// Assigns an input function to a plugin callback for use with the entity
 	// I/O system.
-	virtual void DefineInputFunc(const char* name, fieldtype_t fieldType, const char* mapname, IEntityDataMapInputFuncDelegate* inputFunc);
+	virtual bool DefineInputFunc(const char* name, fieldtype_t fieldType, const char* mapname, IEntityDataMapInputFuncDelegate* inputFunc);
 
 	// Adds an output for use with the entity I/O system.
 	virtual void DefineOutput(const char* name, const char* externalName);

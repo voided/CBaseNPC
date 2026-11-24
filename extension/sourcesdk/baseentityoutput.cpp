@@ -13,28 +13,13 @@ bool CBaseEntityOutput::Init(SourceMod::IGameConfig* config, char* error, size_t
 		return false;
 	}
 
-	uint8_t* addr;
-
-	// g_EntityListPool
-	if (config->GetMemSig("g_EntityListPool", (void**)&addr) && addr)
-	{
-#ifndef WIN32
-		g_pEntityListPool = reinterpret_cast<CUtlMemoryPool*>(addr);
-#else
-		int offset;
-		if (!config->GetOffset("g_EntityListPool", &offset) || !offset)
-		{
-			snprintf(error, maxlength, "Couldn't find offset for g_EntityListPool ptr!");
-			return false;
-		}
-		g_pEntityListPool = *reinterpret_cast<CUtlMemoryPool**>(addr + offset);
-#endif
-	}
-	else
+	void* address = nullptr;
+	if (!GetEngineAddress(config, "g_EntityListPool", &address))
 	{
 		snprintf(error, maxlength, "Couldn't find g_EntityListPool!");
 		return false;
 	}
+	g_pEntityListPool = static_cast<CUtlMemoryPool*>(address);
 
 	// eventFuncs
 	CBaseEntity* pOffsetEnt = servertools->CreateEntityByName("info_target");

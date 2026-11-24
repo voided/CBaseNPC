@@ -4,148 +4,219 @@
 	{
 		"Offsets"
 		{
-			"framesnapshotmanager"
+			"framesnapshotmanager::object"
 			{
-				"windows"   "15"
+				"windows"	"4"
 			}
-			"g_EntityListPool"
+			// Byte offsets of RIP-relative operands in the corresponding Windows x64 signatures.
+			"framesnapshotmanager::rip"
 			{
-				"windows"	"17"
+				"windows64"	"3"
+			}
+			"g_EntityListPool::rip"
+			{
+				"windows64"	"33"
+			}
+			"TheNavMesh::rip"
+			{
+				"windows64"	"569"
+			}
+			"TheNavAreas::rip"
+			{
+				"windows64"	"839"
+			}
+			"g_TouchTrace::rip"
+			{
+				"windows64"	"56"
 			}
 			"CNavMesh::m_isLoaded"
 			{
 				"linux"		"52"
+				"linux64"		"73"
 				"windows"	"52"
+				"windows64"	"73"
 			}
 			"CBaseEntity::Spawn"
 			{
 				"linux"		"25"
+				"linux64"		"25"
 				"windows"	"24"
+				"windows64"	"24"
 			}
 			"CBaseEntity::PostConstructor"
 			{
 				"linux"		"29"
+				"linux64"		"29"
 				"windows"	"28"
+				"windows64"	"28"
 			}
 			"CBaseEntity::GetBaseAnimating"
 			{
 				"linux"		"53"
+				"linux64"		"53"
 				"windows"	"52"
+				"windows64"	"52"
 			}
 			"CBaseEntity::IsAlive"
 			{
 				"linux"		"68"
+				"linux64"		"68"
 				"windows"	"67"
+				"windows64"	"67"
 			}
 			"CBaseEntity::Event_Killed"
 			{
 				"linux"		"69"
+				"linux64"		"69"
 				"windows"	"68"
+				"windows64"	"68"
 			}
 			"CBaseEntity::MyCombatCharacterPointer"
 			{
 				"linux"		"75"
+				"linux64"		"75"
 				"windows"	"74"
+				"windows64"	"74"
 			}
 			"CBaseEntity::MyNextBotPointer"
 			{
 				"linux"		"76"
+				"linux64"		"76"
 				"windows"	"75"
+				"windows64"	"75"
 			}
 			"CBaseEntity::Touch"
 			{
 				"linux"		"106"
+				"linux64"		"106"
 				"windows"	"105"
+				"windows64"	"105"
 			}
 			"CBaseEntity::PhysicsSimulate"
 			{
 				"linux"		"111"
+				"linux64"		"111"
 				"windows"	"110"
+				"windows64"	"110"
 			}
 			"CBaseEntity::UpdateOnRemove"
 			{
 				"linux"		"112"
+				"linux64"		"112"
 				"windows"	"111"
+				"windows64"	"111"
 			}
 			"CBaseEntity::EyeAngles"
 			{
 				"linux"		"139"
+				"linux64"		"139"
 				"windows"	"138"
+				"windows64"	"138"
 			}
 			"CBaseEntity::GetVectors"
 			{
 				"linux"		"144"
+				"linux64"		"144"
 				"windows"	"143"
+				"windows64"	"143"
 			}
 			"CBaseEntity::WorldSpaceCenter"		
 			{
 				"linux"		"157"
+				"linux64"		"157"
 				"windows"	"156"
+				"windows64"	"156"
 			}
 			"CBaseAnimating::StudioFrameAdvance"
 			{
 				"linux"		"202"
+				"linux64"		"202"
 				"windows"	"201"
+				"windows64"	"201"
 			}
 			"CBaseAnimating::DispatchAnimEvents"
 			{
 				"linux"		"214"
+				"linux64"		"214"
 				"windows"	"213"
+				"windows64"	"213"
 			}
 			"CBaseAnimating::HandleAnimEvent"
 			{
 				"linux"		"215"
+				"linux64"		"215"
 				"windows"	"214"
+				"windows64"	"214"
 			}
 			"CBaseAnimating::GetAttachment"
 			{
 				"linux"		"217"
+				"linux64"		"217"
 				"windows"	"216"
+				"windows64"	"216"
 			}
 			"CBaseCombatCharacter::Weapon_Equip"
 			{
 				"linux"		"273"
+				"linux64"		"273"
 				"windows"	"272"
+				"windows64"	"272"
 			}
 			"CBaseCombatCharacter::Weapon_Drop"
 			{
 				"linux"		"275"
+				"linux64"		"275"
 				"windows"	"274"
+				"windows64"	"274"
 			}
 			"CBaseCombatCharacter::OnTakeDamage_Alive"
 			{
 				"linux"		"284"
+				"linux64"		"284"
 				"windows"	"283"
+				"windows64"	"283"
 			}
 			"CBaseCombatCharacter::OnTakeDamage_Dying"
 			{
 				"linux"		"285"
+				"linux64"		"285"
 				"windows"	"284"
+				"windows64"	"284"
 			}
 			"CBaseCombatCharacter::GetLastKnownArea"
 			{
 				"linux"		"324"
+				"linux64"		"324"
 				"windows"	"323"
+				"windows64"	"323"
 			}
 			"CBaseCombatCharacter::UpdateLastKnownArea"
 			{
 				"linux"		"327"
+				"linux64"		"327"
 				"windows"	"326"
+				"windows64"	"326"
 			}
 			"CBaseCombatCharacter::OnNavAreaChanged"
 			{
 				"linux"		"328"
+				"linux64"		"328"
 				"windows"	"327"
+				"windows64"	"327"
 			}
 			"NextBotCombatCharacter::vtable_entries"
 			{
 				"windows"	"339"
 				"linux"		"339"
+				"linux64"		"339"
+				"windows64"	"336"
 			}
 			"NextBotGroundLocomotion::vtable_entries"
 			{
 				"linux"		"111"
+				"linux64"		"111"
 				"windows"	"111"
+				"windows64"	"110"
 			}
 		}
 		"Signatures"
@@ -155,12 +226,16 @@
 				"library"   "engine"
 				"windows"   "\x55\x8B\xEC\x83\xEC\x20\x53\x56\x57\x6A\x01"
 				"linux"     "@_ZN21CFrameSnapshotManager17AddExplicitDeleteEi"
+				"linux64"     "@_ZN21CFrameSnapshotManager17AddExplicitDeleteEi"
+				"windows64"	"\x48\x8B\xC4\x55\x48\x83\xEC\x70\x48\x89\x58\x08\x4C\x8D\x0D\x2A\x2A\x2A\x2A\x48\x89\x70\x10"
 			}
 			"framesnapshotmanager"
 			{
 				"library"  "engine"
 				"windows"  "\x56\xC6\x81\x06\x02\x00\x00\x00"
 				"linux"    "@framesnapshotmanager"
+				"linux64"    "@framesnapshotmanager"
+				"windows64"	"\x48\x8B\x0D\x2A\x2A\x2A\x2A\x8B\xD3\xE8\x2A\x2A\x2A\x2A\xFF\x0D\x2A\x2A\x2A\x2A"
 			}
 			// Find string "Missing command string" which is used by nb_command
 			// nb_command calls TheNextBots()
@@ -169,6 +244,8 @@
 				"library"		"server"
 				"windows"		"\xA1\x2A\x2A\x2A\x2A\x85\xC0\x0F\x85\x2A\x2A\x2A\x2A\xA1\x2A\x2A\x2A\x2A"
 				"linux"			"@_Z11TheNextBotsv"
+				"linux64"			"@_Z11TheNextBotsv"
+				"windows64"	"\x48\x83\xEC\x28\x48\x8B\x05\x2A\x2A\x2A\x2A\x48\x85\xC0\x0F\x85\x2A\x2A\x2A\x2A\x8B\x05\x2A\x2A\x2A\x2A"
 			}
 			// Find string "or_crit_vs_playercond"
 			"CTFGameRules::ApplyOnDamageModifyRules"
@@ -176,6 +253,8 @@
 				"library"		"server"
 				"windows"		"\x55\x8B\xEC\x81\xEC\x8C\x00\x00\x00\x56\x57\x8B\x7D\x08\x89\x4D\xC0"
 				"linux"			"@_ZN12CTFGameRules24ApplyOnDamageModifyRulesER15CTakeDamageInfoP11CBaseEntityb"
+				"linux64"			"@_ZN12CTFGameRules24ApplyOnDamageModifyRulesER15CTakeDamageInfoP11CBaseEntityb"
+				"windows64"	"\x48\x8B\xC4\x44\x88\x48\x20\x4C\x89\x40\x18\x48\x89\x48\x08\x55\x53\x56\x57\x41\x54\x41\x55"
 			}
 			// Find string "mult_dmgtaken"
 			"CTFGameRules::ApplyOnDamageAliveModifyRules"
@@ -183,21 +262,26 @@
 				"library"		"server"
 				"windows"		"\x55\x8B\xEC\x81\xEC\xD4\x00\x00\x00\x53\x8B\x5D\x0C"
 				"linux"			"@_ZN12CTFGameRules29ApplyOnDamageAliveModifyRulesERK15CTakeDamageInfoP11CBaseEntityRNS_20DamageModifyExtras_tE"
+				"linux64"			"@_ZN12CTFGameRules29ApplyOnDamageAliveModifyRulesERK15CTakeDamageInfoP11CBaseEntityRNS_20DamageModifyExtras_tE"
+				"windows64"	"\x48\x8B\xC4\x4C\x89\x40\x18\x48\x89\x48\x08\x55\x56\x57\x41\x54\x41\x55\x41\x56\x41\x57"
 			}
 			"TheNavMesh"
 			{
 				"library"		"server"
 				"linux"			"@TheNavMesh"
+				"linux64"			"@TheNavMesh"
 			}
 			"TheNavAreas"
 			{
 				"library"		"server"
 				"linux"			"@TheNavAreas"
+				"linux64"			"@TheNavAreas"
 			}
 			"g_TouchTrace"
 			{
 				"library"		"server"
 				"linux"			"@_ZL12g_TouchTrace"
+				"linux64"			"@_ZL12g_TouchTrace"
 			}
 			// Find string "Invalid navigation file.\n"
 			"CNavMesh::Load"
@@ -205,6 +289,8 @@
 				"library"		"server"
 				"windows"		"\x55\x8B\xEC\x81\xEC\x7C\x01\x00\x00" 
 				"linux"			"@_ZN8CNavMesh4LoadEv"
+				"linux64"			"@_ZN8CNavMesh4LoadEv"
+				"windows64"	"\x48\x8B\xC4\x48\x89\x48\x08\x55\x53\x57\x41\x55\x48\x8D\xA8\xD8\xFE\xFF\xFF\x48\x81\xEC\x08\x02\x00\x00"
 			}
 			// Find CNavMesh::Load first, then continue until you find call to CNavArea::CheckWaterLevel() in source
 			// CNavArea::CheckWaterLevel calls CNavMesh::GetGroundHeight
@@ -213,6 +299,8 @@
 				"library"		"server"
 				"windows"		"\x53\x8B\xDC\x83\xEC\x08\x83\xE4\xF0\x83\xC4\x04\x55\x8B\x6B\x2A\x89\x6C\x24\x2A\x8B\xEC\x81\xEC\xCC\x00\x00\x00\x56"
 				"linux"			"@_ZNK8CNavMesh15GetGroundHeightERK6VectorPfPS0_"
+				"linux64"			"@_ZNK8CNavMesh15GetGroundHeightERK6VectorPfPS0_"
+				"windows64"	"\x48\x8B\xC4\x48\x89\x58\x08\x48\x89\x70\x10\x48\x89\x78\x18\x4C\x89\x70\x20\x55\x48\x8D\xA8\x28\xFF\xFF\xFF\x48\x81\xEC\xD0\x01\x00\x00\x0F\x29\x70\xE8\x48\x8D\x4D\x00"
 			}
 			// Find data xref of string "weapon_*", should be taken to ppszIgnoredClasses static char* array in CTraceFilterValidForDecal::ShouldHitEntity
 			// CTraceFilterSimple::ShouldHitEntity called with 2 params
@@ -221,6 +309,8 @@
 				"library"		"server"
 				"windows"		"\x55\x8B\xEC\x51\x53\x56\x8B\x75\x08\x57\x8B\xF9\x8B\x0D\x2A\x2A\x2A\x2A"
 				"linux"			"@_ZN18CTraceFilterSimple15ShouldHitEntityEP13IHandleEntityi"
+				"linux64"			"@_ZN18CTraceFilterSimple15ShouldHitEntityEP13IHandleEntityi"
+				"windows64"	"\x48\x89\x5C\x24\x08\x48\x89\x6C\x24\x10\x48\x89\x74\x24\x18\x48\x89\x7C\x24\x20\x41\x56\x48\x83\xEC\x20\x48\x8B\xE9\x41\x8B\xF8"
 			}
 			// Go to first data xref of string "%s has changed its model while processing AnimEvents on sequence %d. Aborting dispatch.\n", this is CBaseAnimating::DispatchAnimEvents
 			// GetAnimationEvent is used in a loop
@@ -229,6 +319,8 @@
 				"library"		"server"
 				"windows"		"\x55\x8B\xEC\x53\x56\x8B\x75\x08\x57\x85\xF6\x0F\x84\x2A\x2A\x2A\x2A\x8B\xCE"
 				"linux"			"@_Z17GetAnimationEventP10CStudioHdriP11animevent_tffi"
+				"linux64"			"@_Z17GetAnimationEventP10CStudioHdriP11animevent_tffi"
+				"windows64"	"\x48\x89\x5C\x24\x08\x48\x89\x74\x24\x10\x57\x48\x83\xEC\x30\x0F\x29\x74\x24\x20\x0F\x28\xF3\x49\x8B\xF0"
 			}
 			// Search for string "%s: unknown scripted sequence \"%s\"\n" to find CAI_ScriptedSequence::StartSequence
 			// CBaseAnimating::LookupSequence is used prior to jmp to this
@@ -237,6 +329,8 @@
 				"library"		"server"
 				"windows"		"\x55\x8B\xEC\x56\x8B\x75\x08\x85\xF6\x0F\x84\x2A\x2A\x2A\x2A\x8B\xCE"
 				"linux"			"@_Z14LookupSequenceP10CStudioHdrPKc"
+				"linux64"			"@_Z14LookupSequenceP10CStudioHdrPKc"
+				"windows64"	"\x48\x89\x5C\x24\x20\x55\x48\x83\xEC\x20\x48\x8B\xEA\x48\x8B\xD9\x48\x85\xC9\x0F\x84\x2A\x2A\x2A\x2A"
 			}
 			// Search for string "CBaseAnimatingOverlay::AddGesture:  model %s missing activity %s\n" to find CBaseAnimatingOverlay::AddGesture
 			// CBaseAnimating::SelectWeightedSequence(Activity) is used prior to jmp to this
@@ -245,6 +339,8 @@
 				"library"		"server"
 				"windows"		"\x55\x8B\xEC\x56\x8B\x75\x08\x85\xF6\x74\x2A\x8B\xCE\xE8\x2A\x2A\x2A\x2A\x84\xC0\x74\x2A\x57\x56"
 				"linux"			"@_Z22SelectWeightedSequenceP10CStudioHdrii"
+				"linux64"			"@_Z22SelectWeightedSequenceP10CStudioHdrii"
+				"windows64"	"\x48\x89\x5C\x24\x10\x48\x89\x6C\x24\x18\x56\x48\x83\xEC\x20\x41\x8B\xF0\x8B\xEA\x48\x8B\xD9"
 			}
 			// Find "placementOrigin" first subroutine call below it
 			"Studio_FindAttachment"
@@ -252,6 +348,8 @@
 				"library"		"server"
 				"windows"		"\x55\x8B\xEC\x53\x56\x57\x8B\x7D\x08\x85\xFF\x74\x2A\x8B\xCF"
 				"linux"			"@_Z21Studio_FindAttachmentPK10CStudioHdrPKc"
+				"linux64"			"@_Z21Studio_FindAttachmentPK10CStudioHdrPKc"
+				"windows64"	"\x48\x89\x5C\x24\x08\x48\x89\x74\x24\x10\x57\x48\x83\xEC\x20\x48\x8B\xF2\x48\x8B\xF9\x48\x85\xC9"
 			}
 			// Bytes sequence search "00 00 C0 00", go to the only subroutine that uses that number with 'and' & 'cmp'
 			"SimThink_EntityChanged"
@@ -259,6 +357,8 @@
 				"library"		"server"
 				"windows"		"\x55\x8B\xEC\x51\x53\x8B\x5D\x08\x56\x8B\xF1\xF6\x83\x3C\x01\x00\x00\x01"
 				"linux"			"@_Z22SimThink_EntityChangedP11CBaseEntity"
+				"linux64"			"@_Z22SimThink_EntityChangedP11CBaseEntity"
+				"windows64"	"\x40\x53\x56\x48\x83\xEC\x28\xF6\x82\xF0\x01\x00\x00\x01\x48\x8B\xF2\x48\x8B\xD9\x0F\x85\x2A\x2A\x2A\x2A"
 			}
 			// Find ".?AVCRallyPoint@@" to get to CRallyPoint's type descriptor -> complete object locator -> vtable
 			// goto xref to vtable to enter CRallyPoint's constructor
@@ -268,6 +368,8 @@
 				"library"		"server"
 				"windows"		"\x55\x8B\xEC\x83\xEC\x08\x53\x56\x8B\xF1\x57\x8D\x2A\x2A\xC7\x06"
 				"linux"			"@_ZN11CBaseEntityC2Eb"
+				"linux64"			"@_ZN11CBaseEntityC2Eb"
+				"windows64"	"\x48\x89\x5C\x24\x18\x88\x54\x24\x10\x55\x56\x57\x41\x54\x41\x55\x41\x56\x41\x57\x48\x83\xEC\x20"
 			}
 			// Find "add 0x%p: %s-%s (%d-%d) [%d in play, %d max]\n" to find CBaseEntity::PhysicsMarkEntityAsTouched
 			// jump to the function calling this one, there can be only one and it's CBaseEntity::PhysicsMarkEntitiesAsTouching
@@ -276,6 +378,8 @@
 				"library"		"server"
 				"windows"		"\x55\x8B\xEC\x57\xFF\x75\x2A\x8B\xF9\xB9"
 				"linux"			"@_ZN11CBaseEntity29PhysicsMarkEntitiesAsTouchingEPS_R10CGameTrace"
+				"linux64"			"@_ZN11CBaseEntity29PhysicsMarkEntitiesAsTouchingEPS_R10CGameTrace"
+				"windows64"	"\x48\x85\xD2\x0F\x84\x2A\x2A\x2A\x2A\x48\x89\x5C\x24\x08\x57\x48\x83\xEC\x20\x8B\x82\xF4\x01\x00\x00"
 			}
 			// Find "m_CalcAbsolutePositionMutex" to find CBaseEntity::CalcAbsolutePosition
 			"CBaseEntity::CalcAbsolutePosition"
@@ -283,18 +387,23 @@
 				"library"		"server"
 				"windows"		"\x55\x8B\xEC\x81\xEC\x80\x00\x00\x00\x56\x8B\xF1\x8B\x86\x3C\x01\x00\x00"
 				"linux"			"@_ZN11CBaseEntity20CalcAbsolutePositionEv"
+				"linux64"			"@_ZN11CBaseEntity20CalcAbsolutePositionEv"
+				"windows64"	"\x4C\x8B\xDC\x55\x53\x49\x8D\x6B\xA1\x48\x81\xEC\xE8\x00\x00\x00\x8B\x81\xF0\x01\x00\x00"
 			}
 			"CBaseEntity::InvalidatePhysicsRecursive"
 			{
 				"library"		"server"
 				"windows"		"\x55\x8B\xEC\x53\x8B\x5D\x08\x56\x8B\xF3\x83\xE6\x04"
 				"linux"			"@_ZN11CBaseEntity26InvalidatePhysicsRecursiveEi"
+				"linux64"			"@_ZN11CBaseEntity26InvalidatePhysicsRecursiveEi"
+				"windows64"	"\x48\x89\x5C\x24\x18\x48\x89\x74\x24\x20\x57\x48\x83\xEC\x20\x8B\xF2\x48\x89\x6C\x24\x30"
 			}
 			"CBaseEntity::SetGroundEntity"
 			{
 				"library"		"server"
 				"windows"		""
 				"linux"			"@_ZN11CBaseEntity15SetGroundEntityEPS_"
+				"linux64"			"@_ZN11CBaseEntity15SetGroundEntityEPS_"
 			}
 			// Find string "CBaseEntity::TakeDamage:  with inputInfo.GetDamageForce() == vec3_origin\n"
 			"CBaseEntity::TakeDamage"
@@ -302,6 +411,8 @@
 				"library"		"server"
 				"windows"		"\x55\x8B\xEC\x81\xEC\x98\x00\x00\x00\x53\x56\x57\x8B\xF9\x8B\x0D\x2A\x2A\x2A\x2A"
 				"linux"			"@_ZN11CBaseEntity10TakeDamageERK15CTakeDamageInfo"
+				"linux64"			"@_ZN11CBaseEntity10TakeDamageERK15CTakeDamageInfo"
+				"windows64"	"\x40\x55\x53\x57\x48\x8D\x6C\x24\xB9\x48\x81\xEC\x00\x01\x00\x00\x48\x8B\xF9\x48\x8B\xDA"
 			}
 			// "g_EntityListPool"
 			"g_EntityListPool"
@@ -309,6 +420,8 @@
 				"library"		"server"
 				"windows"		"\x6A\x04\x68\x2A\x2A\x2A\x2A\x6A\x01\x68\x00\x02\x00\x00\x6A\x1C"
 				"linux"			"@g_EntityListPool"
+				"linux64"			"@g_EntityListPool"
+				"windows64"	"\x48\x83\xEC\x38\xBA\x30\x00\x00\x00\xC7\x44\x24\x28\x08\x00\x00\x00\x48\x8D\x05\x2A\x2A\x2A\x2A"
 			}
 			// Go to data xref of "vehicle_wheel_fl_height" to find CFourWheelPhysics::InitializePoseParameters
 			// CFourWheelPhysics::SetPoseParameter is called after calls to CFourWheelPhysics::LookupPoseParameter
@@ -318,12 +431,16 @@
 				"library"		"server"
 				"windows"		"\x55\x8B\xEC\x51\x8B\x45\x2A\xD9\x45"
 				"linux"			"@_ZN14CBaseAnimating16SetPoseParameterEP10CStudioHdrif"
+				"linux64"			"@_ZN14CBaseAnimating16SetPoseParameterEP10CStudioHdrif"
+				"windows64"	"\x48\x89\x5C\x24\x08\x57\x48\x83\xEC\x30\x0F\x29\x74\x24\x20\x0F\x28\xF3\x49\x63\xD8\x48\x8B\xC2"
 			}
 			"CBaseAnimating::GetPoseParameter"
 			{
 				"library"		"server"
 				"windows"		"\x55\x8B\xEC\x56\x8B\xF1\x57\x80\xBE\x69\x03\x00\x00\x00\x75\x2A\x83\xBE\x98\x04\x00\x00\x00\x75\x2A\xE8\x2A\x2A\x2A\x2A\x85\xC0\x74\x2A\x8B\xCE\xE8\x2A\x2A\x2A\x2A\x8B\xBE\x98\x04\x00\x00"
 				"linux"			"@_ZN14CBaseAnimating16GetPoseParameterEi"
+				"linux64"			"@_ZN14CBaseAnimating16GetPoseParameterEi"
+				"windows64"	"\x48\x89\x5C\x24\x08\x48\x89\x74\x24\x10\x57\x48\x83\xEC\x20\x80\xB9\x65\x04\x00\x00\x00\x48\x8B\xD9"
 			}
 			// Go to data xref of string "move_scale", this is CMultiPlayerAnimState::SetupPoseParameters
 			// Multiple calls to CBaseAnimating::LookupPoseParameter with different pose param names
@@ -332,6 +449,8 @@
 				"library"		"server"
 				"windows"		"\x55\x8B\xEC\x57\x8B\x7D\x08\x85\xFF\x74\x2A\x8B\xCF\xE8\x2A\x2A\x2A\x2A\x84\xC0"
 				"linux"			"@_ZN14CBaseAnimating19LookupPoseParameterEP10CStudioHdrPKc"
+				"linux64"			"@_ZN14CBaseAnimating19LookupPoseParameterEP10CStudioHdrPKc"
+				"windows64"	"\x48\x89\x74\x24\x10\x57\x48\x83\xEC\x20\x49\x8B\xF0\x48\x8B\xFA\x48\x85\xD2\x74\x2A\x48\x8B\xCA"
 			}
 			// Find string "CBaseAnimating::SequenceDuration( %d ) NULL pstudiohdr on %s!\n"
 			// This function is copied across several funcs; the right one is the one returning plain 0.1 floats, and has two parameters (CStudioHdr and int).
@@ -340,6 +459,8 @@
 				"library"		"server"
 				"windows"		"\x55\x8B\xEC\x56\x8B\x75\x2A\x57\x8B\xF9\x85\xF6\x75\x2A\x8B\x47\x2A\xB9\x2A\x2A\x2A\x2A\x85\xC0\x0F\x45\xC8\x51\xFF\x75\x2A\x68\x2A\x2A\x2A\x2A\x6A\x02\xFF\x15\x2A\x2A\x2A\x2A\xD9\x05"
 				"linux"			"@_ZN14CBaseAnimating16SequenceDurationEP10CStudioHdri"
+				"linux64"			"@_ZN14CBaseAnimating16SequenceDurationEP10CStudioHdri"
+				"windows64"	"\x48\x89\x5C\x24\x08\x48\x89\x74\x24\x10\x57\x48\x83\xEC\x20\x41\x8B\xD8\x48\x8B\xFA\x48\x8B\xF1\x48\x85\xD2\x75\x2A\x48\x8B\x81\x98\x00\x00\x00\x4C\x8D\x0D\x2A\x2A\x2A\x2A\x48\x85\xC0\x48\x8D\x15\x2A\x2A\x2A\x2A\x8D\x4F\x02\x4C\x0F\x45\xC8\xFF\x15\x2A\x2A\x2A\x2A\xEB\x2A\x48\x8B\xCF\xE8\x2A\x2A\x2A\x2A\x84\xC0\x74\x2A\x48\x8B\xCF\xE8\x2A\x2A\x2A\x2A\x3B\xD8\x7D\x2A\x85\xDB\x78\x2A\x4C\x8D\x86\xEC\x04\x00\x00\x8B\xD3\x48\x8B\xCF\xE8\x2A\x2A\x2A\x2A"
 			}
 			// Go to data xref of string "ResetSequence : %s: %s -> %s\n"
 			"CBaseAnimating::ResetSequence"
@@ -347,6 +468,8 @@
 				"library"		"server"
 				"windows"		"\x55\x8B\xEC\xA1\x2A\x2A\x2A\x2A\x53\x56\x57\x83\x2A\x30\x00\x8B\xD9\x8B\x7D"
 				"linux"			"@_ZN14CBaseAnimating13ResetSequenceEi"
+				"linux64"			"@_ZN14CBaseAnimating13ResetSequenceEi"
+				"windows64"	"\x41\x56\x48\x83\xEC\x30\x48\x8B\x05\x2A\x2A\x2A\x2A\x4C\x8B\xF1\x48\x89\x5C\x24\x40\x48\x89\x6C\x24\x50"
 			}
 			// Go to first data xref of "simple_bot"
 			// Go to ptr of second push instruction, this is the CEntityFactory<CSimpleBot> singleton
@@ -358,6 +481,8 @@
 				"library"		"server"
 				"windows"		"\x55\x8B\xEC\x56\xFF\x75\x2A\x8B\xF1\xE8\x2A\x2A\x2A\x2A\xC7\x06\x2A\x2A\x2A\x2A\x8B\xC6\xC7\x86\x2A\x2A\x2A\x2A\x00\x00\x80\xBF"
 				"linux"			"@_ZN23NextBotGroundLocomotionC2EP8INextBot"
+				"linux64"			"@_ZN23NextBotGroundLocomotionC2EP8INextBot"
+				"windows64"	"\x40\x53\x48\x83\xEC\x20\x48\x8B\xD9\xE8\x2A\x2A\x2A\x2A\x33\xC9\x48\x8D\x05\x2A\x2A\x2A\x2A\x48\x89\x03\x48\x8D\x05\x2A\x2A\x2A\x2A\x48\x89\x83\x08\x01\x00\x00"
 			}
 			// Go to CEntityFactory<CSimpleBot>::Create
 			// Second call is NextBotCombatCharacter::NextBotCombatCharacter
@@ -366,14 +491,60 @@
 				"library"		"server"
 				"windows"		"\x56\x57\x8B\xF9\xE8\x2A\x2A\x2A\x2A\x8D\x8F\x2A\x2A\x2A\x2A\xE8"
 				"linux"			"@_ZN22NextBotCombatCharacterC2Ev"
+				"linux64"			"@_ZN22NextBotCombatCharacterC2Ev"
+				"windows64"	"\x48\x89\x5C\x24\x08\x57\x48\x83\xEC\x20\x48\x8B\xF9\xE8\x2A\x2A\x2A\x2A\x48\x8D\x8F\x08\x0A\x00\x00\xE8\x2A\x2A\x2A\x2A"
 			}
 		}
 		"Addresses"
 		{
+			"framesnapshotmanager"
+			{
+				"linux"
+				{
+					"signature"	"framesnapshotmanager"
+				}
+				"linux64"
+				{
+					"signature"	"framesnapshotmanager"
+				}
+				"windows"
+				{
+					"signature"	"framesnapshotmanager"
+					"read"	"15"
+				}
+				"windows64"
+				{
+					"signature"	"framesnapshotmanager"
+				}
+			}
+			"g_EntityListPool"
+			{
+				"linux"
+				{
+					"signature"	"g_EntityListPool"
+				}
+				"linux64"
+				{
+					"signature"	"g_EntityListPool"
+				}
+				"windows"
+				{
+					"signature"	"g_EntityListPool"
+					"read"	"17"
+				}
+				"windows64"
+				{
+					"signature"	"g_EntityListPool"
+				}
+			}
 			// Resolve the storage for TheNavMesh.
 			"TheNavMesh"
 			{
 				"linux"
+				{
+					"signature"	"TheNavMesh"
+				}
+				"linux64"
 				{
 					"signature"	"TheNavMesh"
 				}
@@ -382,10 +553,18 @@
 					"signature"	"CNavMesh::Load"
 					"read"		"481"
 				}
+				"windows64"
+				{
+					"signature"	"CNavMesh::Load"
+				}
 			}
 			"TheNavAreas"
 			{
 				"linux"
+				{
+					"signature"	"TheNavAreas"
+				}
+				"linux64"
 				{
 					"signature"	"TheNavAreas"
 				}
@@ -394,6 +573,10 @@
 					"signature"	"CNavMesh::Load"
 					"read"		"687"
 				}
+				"windows64"
+				{
+					"signature"	"CNavMesh::Load"
+				}
 			}
 			"g_TouchTrace"
 			{
@@ -401,10 +584,18 @@
 				{
 					"signature"	"g_TouchTrace"
 				}
+				"linux64"
+				{
+					"signature"	"g_TouchTrace"
+				}
 				"windows"
 				{
 					"signature"	"CBaseEntity::PhysicsMarkEntitiesAsTouching"
 					"read"		"10"
+				}
+				"windows64"
+				{
+					"signature"	"CBaseEntity::PhysicsMarkEntitiesAsTouching"
 				}
 			}
 			"GetAnimationEvent"
@@ -418,6 +609,16 @@
 				{
 					"signature"	"__GetAnimationEvent__"
 					"offset"	"205"
+				}
+				"linux64"
+				{
+					"signature"	"__GetAnimationEvent__"
+					"offset"	"234"
+				}
+				"windows64"
+				{
+					"signature"	"__GetAnimationEvent__"
+					"offset"	"165"
 				}
 			}
 		}

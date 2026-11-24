@@ -1,4 +1,5 @@
 #include "NextBotPath.h"
+#include "pawn_tokens.h"
 #include "sourcesdk/nav_mesh.h"
 
 ConVar* NextBotPathDrawIncrement = nullptr;
@@ -13,6 +14,35 @@ Path::Path( void )
 	m_isCursorDataDirty = true;
 	m_cursorData.segmentPrior = NULL;
 	m_ageTimer.Invalidate();
+	m_subject = NULL;
+}
+
+Path::~Path()
+{
+#ifdef KE_ARCH_X64
+	Invalidate();
+	ForgetPawnToken(this);
+#endif
+}
+
+void Path::Invalidate()
+{
+#ifdef KE_ARCH_X64
+	for (int i = 0; i < m_segmentCount; ++i)
+		ForgetPawnToken(&m_path[i]);
+	ForgetPawnToken(&m_cursorData);
+#endif
+	m_segmentCount = 0;
+
+	m_cursorPos = 0.0f;
+
+	m_cursorData.pos = vec3_origin;
+	m_cursorData.forward = Vector( 1.0f, 0, 0 );
+	m_cursorData.curvature = 0.0f;
+	m_cursorData.segmentPrior = NULL;
+
+	m_isCursorDataDirty = true;
+
 	m_subject = NULL;
 }
 

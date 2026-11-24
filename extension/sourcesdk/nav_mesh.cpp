@@ -1,4 +1,5 @@
 #include "extension.h"
+#include "pawn_tokens.h"
 #include <CDetour/detours.h>
 #include <shareddefs.h>
 #include <enginecallback.h>
@@ -19,6 +20,7 @@ int CNavMesh::offset_m_isLoaded = 0;
 
 DETOUR_DECL_MEMBER0(CNavMesh_Load, NavErrorType)
 {
+	ClearNavPawnTokens();
 	NavErrorType returnVal = DETOUR_MEMBER_CALL(CNavMesh_Load)();
 
 	ToolsNavMesh->Load();
@@ -29,14 +31,14 @@ DETOUR_DECL_MEMBER0(CNavMesh_Load, NavErrorType)
 bool CNavMesh::Init(SourceMod::IGameConfig* config, char* error, size_t maxlength)
 {
 	void* navMeshAddress = nullptr;
-	if (!config->GetAddress("TheNavMesh", &navMeshAddress) || !navMeshAddress)
+	if (!GetEngineAddress(config, "TheNavMesh", &navMeshAddress) || !navMeshAddress)
 	{
 		snprintf(error, maxlength, "Failed to resolve TheNavMesh address!");
 		return false;
 	}
 
 	void* navAreasAddress = nullptr;
-	if (!config->GetAddress("TheNavAreas", &navAreasAddress) || !navAreasAddress)
+	if (!GetEngineAddress(config, "TheNavAreas", &navAreasAddress) || !navAreasAddress)
 	{
 		snprintf(error, maxlength, "Failed to resolve TheNavAreas address!");
 		return false;
@@ -72,7 +74,7 @@ bool CNavMesh::Init(SourceMod::IGameConfig* config, char* error, size_t maxlengt
 		return false;
 	}
 
-	g_pSM->LogMessage(myself, "NavMesh: 0x%X NavAreas: 0x%X", TheNavMesh, pTheNavAreas);
+	g_pSM->LogMessage(myself, "NavMesh: %p NavAreas: %p", TheNavMesh, pTheNavAreas);
 
 	ToolsNavMesh->Load();
 	return true;

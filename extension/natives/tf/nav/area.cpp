@@ -1,11 +1,12 @@
 #include "area.hpp"
+#include "pawn_tokens.h"
 
 #include "sourcesdk/tf_nav_area.h"
 
 namespace natives::tf::nav::area {
 
 inline CTFNavArea* Get(IPluginContext* context, const cell_t param) {
-	CTFNavArea* area = (CTFNavArea*)PawnAddressToPtr(param);
+	CTFNavArea* area = (CTFNavArea*)PawnTokenToPtr(param);
 	if (!area) {
 		context->ThrowNativeError("TFNav area ptr is null!");
 		return nullptr;

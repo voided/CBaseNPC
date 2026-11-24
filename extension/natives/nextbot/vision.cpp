@@ -1,12 +1,14 @@
 #include "vision.hpp"
+#include "pawn_tokens.h"
 #include "knownentity.hpp"
 
 #include "NextBotVisionInterface.h"
 
+
 namespace natives::nextbot::vision  {
 
 inline IVision* Get(IPluginContext* context, const cell_t param) {
-	IVision* vision = (IVision*)PawnAddressToPtr(param);
+	IVision* vision = (IVision*)PawnTokenToPtr(param);
 	if (!vision) {
 		context->ThrowNativeError("Vision ptr is null!");
 		return nullptr;
@@ -20,7 +22,7 @@ cell_t GetPrimaryKnownThreat(IPluginContext* context, const cell_t* params) {
 		return 0;
 	}
 
-	return PtrToPawnAddress(vision->GetPrimaryKnownThreat((params[2]) ? true : false));
+	return KnownEntityToPawnToken(vision, vision->GetPrimaryKnownThreat((params[2]) ? true : false));
 }
 
 cell_t GetTimeSinceVisible(IPluginContext* context, const cell_t* params) {
@@ -38,7 +40,7 @@ cell_t GetClosestKnown(IPluginContext* context, const cell_t* params) {
 		return 0;
 	}
 
-	return PtrToPawnAddress(vision->GetClosestKnown(params[2]));
+	return KnownEntityToPawnToken(vision, vision->GetClosestKnown(params[2]));
 }
 
 cell_t GetKnownCount(IPluginContext* context, const cell_t* params) {
@@ -60,7 +62,7 @@ cell_t GetKnown(IPluginContext* context, const cell_t* params) {
 	if (!entity) {
 		return context->ThrowNativeError("Invalid Entity Reference/Index %i", params[2]);
 	}
-	return PtrToPawnAddress(vision->GetKnown(entity));
+	return KnownEntityToPawnToken(vision, vision->GetKnown(entity));
 }
 
 cell_t AddKnownEntity(IPluginContext* context, const cell_t* params) {
@@ -87,6 +89,9 @@ cell_t ForgetEntity(IPluginContext* context, const cell_t* params) {
 	if (!entity) {
 		return context->ThrowNativeError("Invalid Entity Reference/Index %i", params[2]);
 	}
+#ifdef KE_ARCH_X64
+	ForgetPawnToken(vision->GetKnown(entity));
+#endif
 	vision->ForgetEntity(entity);
 	return 0;
 }

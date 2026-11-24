@@ -43,19 +43,13 @@ enum //CAnimationLayer
 methodmap CAnimationOverlay  
 {
 	#pragma deprecated Use CAnimationLayer instead
-	public CAnimationOverlay(Address address)
+	public native CAnimationOverlay(Address address);
+
+	property Address Address
 	{
-		return view_as<CAnimationOverlay>(address);
+		public native get();
 	}
-	
-	property Address Address  
-	{
-		public get()  
-		{
-			return view_as<Address>(this); 
-		}
-	}
-	
+
 	property bool isNull
 	{
 		public get()  
@@ -66,12 +60,12 @@ methodmap CAnimationOverlay
 
 	public any Get(int iOffset) 
 	{ 
-		return LoadFromAddress(this.Address + view_as<Address>(iOffset), NumberType_Int32); 
+		return LoadFromAddress(this.Address + iOffset, NumberType_Int32);
 	}
 	
 	public void Set(int iOffset, any iValue) 
 	{ 
-		StoreToAddress(this.Address + view_as<Address>(iOffset), iValue, NumberType_Int32); 
+		StoreToAddress(this.Address + iOffset, iValue, NumberType_Int32);
 	}
 	
 	#pragma deprecated Use CAnimationLayer.IsActive() instead

@@ -1,4 +1,5 @@
 #include "eventresponder.hpp"
+#include "pawn_tokens.h"
 
 #include "NextBotEventResponderInterface.h"
 #include "sourcesdk/baseentity.h"
@@ -6,7 +7,7 @@
 namespace natives::nextbot::eventresponder  {
 
 inline INextBotEventResponder* Get(IPluginContext* context, const cell_t param) {	
-	INextBotEventResponder* responder = (INextBotEventResponder*)PawnAddressToPtr(param);
+	INextBotEventResponder* responder = (INextBotEventResponder*)PawnTokenToPtr(param);
 	if (!responder) {
 		context->ThrowNativeError("Event responder ptr is null!");
 		return nullptr;
@@ -20,7 +21,7 @@ cell_t FirstContainedResponder(IPluginContext* context, const cell_t* params) {
 		return 0;
 	}
 
-	return PtrToPawnAddress(responder->FirstContainedResponder());
+	return PtrToPawnToken(responder->FirstContainedResponder());
 }
 
 cell_t NextContainedResponder(IPluginContext* context, const cell_t* params) {
@@ -33,7 +34,7 @@ cell_t NextContainedResponder(IPluginContext* context, const cell_t* params) {
 	if (!responder2) {
 		return 0;
 	}
-	return PtrToPawnAddress(responder->NextContainedResponder(responder2));
+	return PtrToPawnToken(responder->NextContainedResponder(responder2));
 }
 
 cell_t OnLeaveGround(IPluginContext* context, const cell_t* params) {
@@ -74,7 +75,7 @@ cell_t OnMoveToSuccess(IPluginContext* context, const cell_t* params) {
 		return 0;
 	}
 
-	Path* path = (Path*)PawnAddressToPtr(params[2]);
+	Path* path = (Path*)PawnTokenToPtr(params[2]);
 	if (!path) {
 		return context->ThrowNativeError("Path is null!");
 	}
@@ -89,7 +90,7 @@ cell_t OnMoveToFailure(IPluginContext* context, const cell_t* params) {
 		return 0;
 	}
 
-	Path* path = (Path*)PawnAddressToPtr(params[2]);
+	Path* path = (Path*)PawnTokenToPtr(params[2]);
 	if (!path) {
 		return context->ThrowNativeError("Path is null!");
 	}
@@ -231,7 +232,7 @@ cell_t OnNavAreaChanged(IPluginContext* context, const cell_t* params) {
 		return 0;
 	}
 
-	responder->OnNavAreaChanged((CNavArea*)PawnAddressToPtr(params[2]), (CNavArea*)PawnAddressToPtr(params[3]));
+	responder->OnNavAreaChanged((CNavArea*)PawnTokenToPtr(params[2]), (CNavArea*)PawnTokenToPtr(params[3]));
 	return 0;
 }
 

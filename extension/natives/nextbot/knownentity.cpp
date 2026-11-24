@@ -1,11 +1,12 @@
 #include "knownentity.hpp"
+#include "pawn_tokens.h"
 
 #include "NextBotKnownEntity.h"
 
 namespace natives::nextbot::knownentity  {
 
 inline CKnownEntity* Get(IPluginContext* context, const cell_t param) {	
-	CKnownEntity* entity = (CKnownEntity*)PawnAddressToPtr(param);
+	CKnownEntity* entity = (CKnownEntity*)PawnTokenToPtr(param);
 	if (!entity) {
 		context->ThrowNativeError("Known entity ptr is null!");
 		return nullptr;
@@ -19,6 +20,7 @@ cell_t Destroy(IPluginContext* context, const cell_t* params) {
 		return 0;
 	}
 
+	ForgetPawnToken(entity);
 	entity->Destroy();
 	return 0;
 }
@@ -81,7 +83,7 @@ cell_t GetLastKnownArea(IPluginContext* context, const cell_t* params) {
 		return 0;
 	}
 
-	return PtrToPawnAddress(entity->GetLastKnownArea());
+	return PtrToPawnToken(entity->GetLastKnownArea());
 }
 
 cell_t GetTimeSinceLastKnown(IPluginContext* context, const cell_t* params) {

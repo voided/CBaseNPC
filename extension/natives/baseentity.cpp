@@ -1,4 +1,5 @@
 #include "sourcesdk/baseentity.h"
+#include "pawn_tokens.h"
 
 #include "baseentity.hpp"
 #include "serialrefresher.h"
@@ -19,21 +20,21 @@ cell_t iUpdateOnRemove(IPluginContext* context, const cell_t* params) {
 }
 
 cell_t NetworkProp(IPluginContext* context, const cell_t* params) {
-	auto entity = Get(context, params[1]);
+	auto entity = Get(context, params[2]);
 	if (!entity) {
 		return 0;
 	}
 
-	return PtrToPawnAddress(entity->NetworkProp());
+	return WritePawnAddress(context, params[1], entity->NetworkProp());
 }
 
 cell_t CollisionProp(IPluginContext* context, const cell_t* params) {
-	auto entity = Get(context, params[1]);
+	auto entity = Get(context, params[2]);
 	if (!entity) {
 		return 0;
 	}
 
-	return PtrToPawnAddress(entity->CollisionProp());
+	return WritePawnAddress(context, params[1], entity->CollisionProp());
 }
 
 cell_t DispatchUpdateTransmitState(IPluginContext* context, const cell_t* params) {
@@ -301,7 +302,9 @@ cell_t NetworkStateChangedVar(IPluginContext* context, const cell_t* params) {
 		return 0;
 	}
 
-	entity->NetworkStateChanged(PawnAddressToPtr(params[2]));
+	if (void* address = ReadPawnAddress(context, params[2])) {
+		entity->NetworkStateChanged(address);
+	}
 	return 0;
 }
 
@@ -481,7 +484,7 @@ cell_t MyNextBotPointer(IPluginContext* context, const cell_t* params) {
 		return 0;
 	}
 
-	return PtrToPawnAddress(entity->MyNextBotPointer());
+	return BotToPawnToken(entity->MyNextBotPointer(), entity);
 }
 
 cell_t GetBaseAnimating(IPluginContext* context, const cell_t* params) {
@@ -517,7 +520,7 @@ cell_t TakeDamage(IPluginContext* context, const cell_t* params) {
 		return 0;
 	}
 
-	CTakeDamageInfo* inputInfo = (CTakeDamageInfo*)PawnAddressToPtr(params[2]);
+	CTakeDamageInfo* inputInfo = (CTakeDamageInfo*)PawnTokenToPtr(params[2]);
 	if (!inputInfo) {
 		context->ThrowNativeError("CTakeDamageInfo is a null ptr!");
 		return 0;

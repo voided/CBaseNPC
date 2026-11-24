@@ -23,6 +23,8 @@ parser.options.add_argument('-s', '--sdks', default='all', dest='sdks',
                             'comma-delimited list of engine names (default: %(default)s)')
 parser.options.add_argument('--targets', type=str, dest='targets', default=None,
 		                      help="Override the target architecture (use commas to separate multiple targets).")
+parser.options.add_argument('--libffi-root', type=str, default=None,
+                         help='Directory containing static libffi installations for each target architecture.')
 parser.options.add_argument('--extension-only', action='store_true', dest='extension_only', default=False,
                          help='Only build the extension.')
 parser.options.add_argument('--scripting-only', action='store_true', dest='scripting_only', default=False,

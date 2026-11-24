@@ -1,4 +1,5 @@
 #include "NextBotInterface.h"
+#include "pawn_tokens.h"
 #include "NextBotComponentInterface.h"
 #include "NextBotManager.h"
 #include "sourcesdk/baseentity.h"
@@ -32,6 +33,7 @@ INextBot::INextBot(void) : m_LocoInterface(nullptr),
 //----------------------------------------------------------------------------------------------------------------
 INextBot::~INextBot()
 {
+	ForgetPawnToken(this);
 	ResetDebugHistory();
 
 	TheNextBots().UnRegister(this);

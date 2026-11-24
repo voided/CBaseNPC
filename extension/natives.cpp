@@ -1,4 +1,5 @@
 #include "natives.hpp"
+#include "pawn_tokens.h"
 
 #include "natives/baseanimating.hpp"
 #include "natives/baseanimatingoverlay.hpp"
@@ -122,7 +123,7 @@ cell_t CBaseNPC_GetNextBotOfEntity(IPluginContext *pContext, const cell_t *param
 	CBaseEntity *pEntity;
 	ENTINDEX_TO_CBASEENTITY(params[1], pEntity);
 	
-	return PtrToPawnAddress(pEntity->MyNextBotPointer());
+	return BotToPawnToken(pEntity->MyNextBotPointer(), pEntity);
 }
 
 cell_t CBaseNPC_HookEventKilled(IPluginContext *pContext, const cell_t *params)

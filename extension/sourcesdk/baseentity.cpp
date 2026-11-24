@@ -158,7 +158,7 @@ bool CBaseEntity::Init(SourceMod::IGameConfig* config, char* error, size_t maxle
 	}
 
 	void* address = nullptr;
-	if (!config->GetAddress("g_TouchTrace", &address) || !address)
+	if (!GetEngineAddress(config, "g_TouchTrace", &address) || !address)
 	{
 		snprintf(error, maxlength, "Failed to resolve g_TouchTrace address!");
 		return false;

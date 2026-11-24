@@ -1,25 +1,71 @@
 #include "helpers.h"
 #include <itoolentity.h>
+#include <cstring>
+#include <limits>
 
 extern IServerTools *servertools;
 
 int nothing;
 
-IPluginFunction *GetFunctionByNameEx(IPluginContext *pContext, const char *name)
+static cell_t* GetPawnAddressCells(IPluginContext* context, cell_t local)
 {
-	IPluginRuntime *pRuntime = pContext->GetRuntime();
-	for(uint32_t i = 0; i < pRuntime->GetPublicsNum(); i++)
+	if (context->GetRuntime()->FindPubvarByName("__Int64_Address__", nullptr) != SP_ERROR_NONE)
 	{
-		sp_public_t *pub = nullptr;
-		if(pRuntime->GetPublicByIndex(i, &pub) == SP_ERROR_NONE)
-		{
-			if(strstr(pub->name, name) != nullptr)
-			{
-				return pRuntime->GetFunctionById(pub->funcid);
-			}
-		}
+		context->ThrowNativeError("Recompile this plugin with the SourceMod 1.13 includes to use Address");
+		return nullptr;
 	}
-	return nullptr;
+
+	cell_t* cells = nullptr;
+	if (int error = context->LocalToPhysAddr(local, &cells); error != SP_ERROR_NONE)
+	{
+		context->ThrowNativeErrorEx(error, "Invalid Address argument");
+		return nullptr;
+	}
+	return cells;
+}
+
+void* ReadPawnAddress(IPluginContext* context, cell_t local)
+{
+	const cell_t* cells = GetPawnAddressCells(context, local);
+	if (!cells)
+		return nullptr;
+
+	uint64_t address;
+	std::memcpy(&address, cells, sizeof(address));
+	if (address > std::numeric_limits<uintptr_t>::max())
+	{
+		context->ThrowNativeError("Address does not fit in a native pointer");
+		return nullptr;
+	}
+	return reinterpret_cast<void*>(static_cast<uintptr_t>(address));
+}
+
+cell_t WritePawnAddress(IPluginContext* context, cell_t local, const void* ptr)
+{
+	if (cell_t* cells = GetPawnAddressCells(context, local))
+	{
+		const uint64_t address = reinterpret_cast<uintptr_t>(ptr);
+		std::memcpy(cells, &address, sizeof(address));
+	}
+	return 0;
+}
+
+bool GetEngineAddress(IGameConfig* config, const char* name, void** address)
+{
+	if (!config->GetAddress(name, address) || !*address)
+		return false;
+
+	// Some x64 gamedata addresses point to a RIP-relative displacement in code.
+	int offset;
+	const std::string key = std::string(name) + "::rip";
+	if (config->GetOffset(key.c_str(), &offset))
+	{
+		const auto* displacement = static_cast<const uint8_t*>(*address) + offset;
+		int32_t relative;
+		std::memcpy(&relative, displacement, sizeof(relative));
+		*address = reinterpret_cast<void*>(reinterpret_cast<uintptr_t>(displacement) + sizeof(relative) + relative);
+	}
+	return true;
 }
 
 void MatrixToPawnMatrix(IPluginContext* context, cell_t* matAddr, const matrix3x4_t& mat)

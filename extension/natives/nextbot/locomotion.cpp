@@ -1,4 +1,5 @@
 #include "locomotion.hpp"
+#include "pawn_tokens.h"
 #include "locomotion/ground.hpp"
 
 #include "NextBotLocomotionInterface.h"
@@ -6,7 +7,7 @@
 namespace natives::nextbot::locomotion {
 
 inline ILocomotion* Get(IPluginContext* context, const cell_t param) {
-	ILocomotion* mover = (ILocomotion*)PawnAddressToPtr(param);
+	ILocomotion* mover = (ILocomotion*)PawnTokenToPtr(param);
 	if (!mover) {
 		context->ThrowNativeError("Locomotion ptr is null!");
 		return nullptr;
@@ -263,7 +264,7 @@ cell_t ClimbLadder(IPluginContext* context, const cell_t* params) {
 		return 0;
 	}
 
-	mover->ClimbLadder((CNavLadder*)PawnAddressToPtr(params[2]), (CNavArea*)PawnAddressToPtr(params[3]));
+	mover->ClimbLadder((CNavLadder*)PawnTokenToPtr(params[2]), (CNavArea*)PawnTokenToPtr(params[3]));
 	return 0;
 }
 
@@ -273,7 +274,7 @@ cell_t DescendLadder(IPluginContext* context, const cell_t* params) {
 		return 0;
 	}
 
-	mover->DescendLadder((CNavLadder*)PawnAddressToPtr(params[2]), (CNavArea*)PawnAddressToPtr(params[3]));
+	mover->DescendLadder((CNavLadder*)PawnTokenToPtr(params[2]), (CNavArea*)PawnTokenToPtr(params[3]));
 	return 0;
 }
 
@@ -480,7 +481,7 @@ cell_t IsAreaTraversable(IPluginContext* context, const cell_t* params) {
 		return 0;
 	}
 
-	return (mover->IsAreaTraversable((CNavArea *)PawnAddressToPtr(params[2])) == true) ? 1 : 0;
+	return (mover->IsAreaTraversable((CNavArea *)PawnTokenToPtr(params[2])) == true) ? 1 : 0;
 }
 
 cell_t GetTraversableSlopeLimit(IPluginContext* context, const cell_t* params) {

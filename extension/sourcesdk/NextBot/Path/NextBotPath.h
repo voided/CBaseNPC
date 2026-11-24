@@ -57,7 +57,7 @@ class Path
 {
 public:
 	Path( void );
-	virtual ~Path() { }
+	virtual ~Path();
 	
 	enum SegmentType
 	{
@@ -746,22 +746,6 @@ inline float Path::GetLength( void ) const
 inline bool Path::IsValid( void ) const
 {
 	return (m_segmentCount > 0);
-}
-
-inline void Path::Invalidate( void )
-{
-	m_segmentCount = 0;
-
-	m_cursorPos = 0.0f;
-	
-	m_cursorData.pos = vec3_origin;
-	m_cursorData.forward = Vector( 1.0f, 0, 0 );
-	m_cursorData.curvature = 0.0f;
-	m_cursorData.segmentPrior = NULL;
-	
-	m_isCursorDataDirty = true;
-
-	m_subject = NULL;
 }
 
 inline const Path::Segment *Path::FirstSegment( void ) const

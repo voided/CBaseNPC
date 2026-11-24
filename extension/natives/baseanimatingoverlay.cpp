@@ -1,4 +1,5 @@
 #include "sourcesdk/baseanimatingoverlay.h"
+#include "pawn_tokens.h"
 #include "baseanimatingoverlay.hpp"
 
 namespace natives::baseanimatingoverlay {
@@ -6,13 +7,21 @@ namespace natives::baseanimatingoverlay {
 namespace layer {
 
 inline CAnimationLayer* Get(IPluginContext* context, const cell_t param) {	
-	CAnimationLayer* layer = (CAnimationLayer*)PawnAddressToPtr(param);
+	CAnimationLayer* layer = (CAnimationLayer*)PawnTokenToPtr(param);
 	if (!layer) {
 		context->ThrowNativeError("Layer is a null ptr!");
 		return nullptr;
 	}
 
 	return layer;
+}
+
+cell_t CAnimationOverlay_Ctor(IPluginContext* context, const cell_t* params) {
+	return PtrToPawnToken(ReadPawnAddress(context, params[1]));
+}
+
+cell_t GetAddress(IPluginContext* context, const cell_t* params) {
+	return WritePawnAddress(context, params[1], PawnTokenToPtr(params[2]));
 }
 
 cell_t Getm_fFlags(IPluginContext* context, const cell_t* params) {
@@ -397,6 +406,8 @@ cell_t Setm_pOwnerEntity(IPluginContext* context, const cell_t* params) {
 
 void setup(std::vector<sp_nativeinfo_t>& natives) {
 	sp_nativeinfo_t list[] = {
+		{"CAnimationOverlay.CAnimationOverlay", CAnimationOverlay_Ctor},
+		{"CAnimationOverlay.Address.get", GetAddress},
 		{"CAnimationLayer.m_fFlags.get", Getm_fFlags},
 		{"CAnimationLayer.m_fFlags.set", Setm_fFlags},
 		{"CAnimationLayer.m_bSequenceFinished.get", Getm_bSequenceFinished},
@@ -697,7 +708,17 @@ cell_t GetAnimOverlay(IPluginContext* context, const cell_t* params) {
 		return 0;
 	}
 
-	return PtrToPawnAddress(entity->GetAnimOverlay(params[2]));
+	const int index = params[2];
+	auto* layer = entity->GetAnimOverlay(index);
+#ifdef KE_ARCH_X64
+	const auto owner = gamehelpers->EntityToReference(entity);
+	return BorrowPawnToken(layer, [owner, index, layer] {
+		auto* current = static_cast<CBaseAnimatingOverlay*>(gamehelpers->ReferenceToEntity(owner));
+		return current && current->GetAnimOverlay(index) == layer;
+	});
+#else
+	return PtrToPawnToken(layer);
+#endif
 };
 
 cell_t GetNumAnimOverlays(IPluginContext* context, const cell_t* params) {

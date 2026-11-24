@@ -1,9 +1,10 @@
 #include "path.hpp"
+#include "pawn_tokens.h"
 
 namespace natives::nextbot::component {
 
 inline INextBotComponent* Get(IPluginContext* context, const cell_t param) {	
-	INextBotComponent* component = (INextBotComponent*)PawnAddressToPtr(param);
+	INextBotComponent* component = (INextBotComponent*)PawnTokenToPtr(param);
 	if (!component) {
 		context->ThrowNativeError("Component is a null ptr!");
 		return nullptr;
@@ -48,7 +49,8 @@ cell_t GetBot(IPluginContext* context, const cell_t* params) {
 		return 0;
 	}
 
-	return PtrToPawnAddress(component->GetBot());
+	auto* bot = component->GetBot();
+	return bot ? BotToPawnToken(bot, bot->GetEntity()) : 0;
 }
 
 void setup(std::vector<sp_nativeinfo_t>& natives) {
