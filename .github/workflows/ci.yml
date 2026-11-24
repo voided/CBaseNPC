@@ -109,6 +109,9 @@ jobs:
           PYTHON: ${{ matrix.target.python }}
           EXTENSION_SUFFIX: ${{ matrix.target.suffix }}
         run: |
+          if [ "$RUNNER_OS" = Linux ]; then
+            git config --global --add safe.directory "$PWD"
+          fi
           mkdir build
           cd build
           "$PYTHON" ../configure.py \
