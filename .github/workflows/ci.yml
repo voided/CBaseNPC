@@ -1,0 +1,176 @@
+name: CI
+
+on:
+  push:
+    branches: [master, 'feature/**']
+  pull_request:
+    branches: [master, 'feature/**']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  SOURCEMOD_BRANCH: 1.12-dev
+
+jobs:
+  build-plugins:
+    name: SourcePawn
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Setup Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+
+      - name: Install AMBuild
+        run: python -m pip install git+https://github.com/alliedmodders/ambuild.git
+
+      - name: Build example plugins
+        run: |
+          git clone --depth 1 --branch "$SOURCEMOD_BRANCH" \
+            https://github.com/alliedmodders/sourcemod.git sourcemod
+          compiler=$(docker create "ghcr.io/alliedmodders/sourcemod-spcomp:$SOURCEMOD_BRANCH")
+          trap 'docker rm "$compiler" >/dev/null' EXIT
+          docker cp "$compiler:/usr/local/bin/spcomp" "$RUNNER_TEMP/spcomp"
+          mkdir build
+          cd build
+          python ../configure.py --scripting-only \
+            --spcomp-path "$RUNNER_TEMP/spcomp" \
+            --sm-api-path "$GITHUB_WORKSPACE/sourcemod/plugins/include"
+          ambuild
+
+      - name: Upload example plugins
+        uses: actions/upload-artifact@v7
+        with:
+          name: plugins
+          path: build/package/addons/sourcemod/plugins/disabled/*.smx
+          if-no-files-found: error
+
+  build-extension:
+    name: ${{ matrix.target.os_name }}-x86
+    needs: build-plugins
+    runs-on: ${{ matrix.target.runner }}
+    container: ${{ matrix.target.container }}
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          - runner: ubuntu-latest
+            os_name: linux
+            container: ghcr.io/alliedmodders/build-containers/debian11-clang22:latest
+            python: python3
+            suffix: so
+          - runner: windows-latest
+            os_name: windows
+            python: python
+            suffix: dll
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+          submodules: recursive
+
+      - name: Setup Python (Windows)
+        if: runner.os == 'Windows'
+        uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+
+      - name: Setup MSVC (Windows)
+        if: runner.os == 'Windows'
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x86
+
+      - name: Install AMBuild (Windows)
+        if: runner.os == 'Windows'
+        run: python -m pip install git+https://github.com/alliedmodders/ambuild.git
+
+      - name: Clone dependencies
+        shell: bash
+        run: |
+          git clone --depth 1 --recurse-submodules --shallow-submodules -j8 \
+            --branch "$SOURCEMOD_BRANCH" https://github.com/alliedmodders/sourcemod.git sourcemod
+          git clone --depth 1 --recurse-submodules --shallow-submodules -j8 \
+            --branch 1.12-dev https://github.com/alliedmodders/metamod-source.git mmsource
+          git clone --depth 1 --branch tf2 https://github.com/alliedmodders/hl2sdk.git hl2sdk-tf2
+
+      - name: Build extension
+        shell: bash
+        env:
+          PYTHON: ${{ matrix.target.python }}
+          EXTENSION_SUFFIX: ${{ matrix.target.suffix }}
+        run: |
+          if [ "$RUNNER_OS" = Linux ]; then
+            git config --global --add safe.directory "$PWD"
+          fi
+          mkdir build
+          cd build
+          "$PYTHON" ../configure.py \
+            --extension-only --enable-optimize --enable-auto-versioning \
+            --targets=x86 --sdks=tf2 \
+            --sm-path ../sourcemod --mms-path ../mmsource --hl2sdk-root ..
+          ambuild
+          test -s "package/addons/sourcemod/extensions/cbasenpc.ext.2.tf2.$EXTENSION_SUFFIX"
+
+      - name: Add example plugins to package
+        uses: actions/download-artifact@v8
+        with:
+          name: plugins
+          path: build/package/addons/sourcemod/plugins/disabled
+
+      - name: Upload package artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: pkg-${{ matrix.target.os_name }}-x86
+          path: build/package/
+          if-no-files-found: error
+
+      - name: Upload release version
+        if: runner.os == 'Linux' && github.ref == 'refs/heads/master'
+        uses: actions/upload-artifact@v7
+        with:
+          name: release-version
+          path: build/includes/git_action_release
+          if-no-files-found: error
+
+  release:
+    name: Release
+    needs: build-extension
+    if: github.ref == 'refs/heads/master' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v8
+        with:
+          path: artifacts
+
+      - name: Assemble packages
+        id: package
+        run: |
+          version=$(cat artifacts/release-version/git_action_release)
+          mkdir assets
+          tar -czf "assets/cbasenpc${version}_linux.tar.gz" -C artifacts/pkg-linux-x86 addons
+          (cd artifacts/pkg-windows-x86 && python3 -m zipfile -c "../../assets/cbasenpc${version}_windows.zip" addons)
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      - name: Create release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.package.outputs.version }}
+        run: |
+          gh release create "$VERSION" assets/* \
+            --repo "$GITHUB_REPOSITORY" \
+            --target "$GITHUB_SHA" \
+            --title "CBaseNPC $VERSION" \
+            --notes "Automated release built from $GITHUB_SHA."
