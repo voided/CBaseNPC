@@ -70,6 +70,9 @@ public:
 	// Finds the data offset using the provided info.
 	virtual bool GetDataOffset( const sm_datatable_info_t &info, int &offset, int element=0, char* error=nullptr, size_t maxlen=0 ) const;
 
+	// Initializes entity handle fields to the SDK's invalid handle value.
+	void InitializeEntityHandles(void* object) const;
+
 	// Gets data stored at the int/short/char/bool within the provided object.
 	// This class's datamap is used to calculate offsets.
 	virtual bool GetObjectData( void* obj, const char* prop, int &data, int element=0, char* error=nullptr, size_t maxlen=0 );

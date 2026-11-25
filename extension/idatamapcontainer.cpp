@@ -3,6 +3,8 @@
 #include "helpers.h"
 #include <cstring>
 #include <memory>
+#include <new>
+#include <mathlib/vmatrix.h>
 #include "baseentityoutput.h"
 
 IDataMapContainer::IDataMapContainer()
@@ -92,45 +94,55 @@ void IDataMapContainer::BeginDataDesc()
 	DestroyDataDesc();
 }
 
-int g_DataMapDescFieldSizes[] = {
-	0,						// FIELD_VOID
-	sizeof(float), 			// FIELD_FLOAT
-	sizeof(int),			// FIELD_STRING
-	3 * sizeof(float),		// FIELD_VECTOR
-	4 * sizeof(float),		// FIELD_QUATERNION
-	sizeof(int),			// FIELD_INTEGER
-	sizeof(char),			// FIELD_BOOLEAN
-	sizeof(short),			// FIELD_SHORT
-	sizeof(char),			// FIELD_CHARACTER
-	sizeof(int),			// FIELD_COLOR32
-	0,						// FIELD_EMBEDDED
-	0,						// FIELD_CUSTOM
-	sizeof(CBaseEntity*), // FIELD_CLASSPTR
-	sizeof(int),			// FIELD_EHANDLE
-	sizeof(edict_t*),		// FIELD_EDICT
-	3 * sizeof(float),		// FIELD_POSITION_VECTOR
-	sizeof(float),			// FIELD_TIME
-	sizeof(int),			// FIELD_TICK
-	sizeof(int),			// FIELD_MODELNAME
-	sizeof(int),			// FIELD_SOUNDNAME
-	sizeof(int),			// FIELD_INPUT
-	
-	// FIELD_FUNCTION
-#ifdef POSIX
-	sizeof(uint64),
-#else
-	sizeof(int *),
-#endif
-
-	16 * sizeof(float),		// FIELD_VMATRIX
-	16 * sizeof(float),		// FIELD_VMATRIX_WORLDSPACE
-	12 * sizeof(float),		// FIELD_MATRIX3X4_WORLDSPACE
-	2 * sizeof(float),		// FIELD_INTERVAL
-	sizeof(int),			// FIELD_MODELINDEX
-	sizeof(int),			// FIELD_MATERIALINDEX
-	2 * sizeof(float),		// FIELD_VECTOR2D
-
+namespace
+{
+struct DataMapFieldLayout
+{
+	size_t size;
+	size_t alignment;
 };
+
+template <typename T>
+constexpr DataMapFieldLayout FieldLayout()
+{
+	return {sizeof(T), alignof(T)};
+}
+
+constexpr DataMapFieldLayout g_DataMapFieldLayouts[] = {
+	{},                         // FIELD_VOID
+	FieldLayout<float>(),        // FIELD_FLOAT
+	FieldLayout<string_t>(),     // FIELD_STRING
+	FieldLayout<Vector>(),       // FIELD_VECTOR
+	FieldLayout<Quaternion>(),   // FIELD_QUATERNION
+	FieldLayout<int>(),          // FIELD_INTEGER
+	FieldLayout<bool>(),         // FIELD_BOOLEAN
+	FieldLayout<short>(),        // FIELD_SHORT
+	FieldLayout<char>(),         // FIELD_CHARACTER
+	FieldLayout<color32>(),      // FIELD_COLOR32
+	{},                         // FIELD_EMBEDDED (type-specific storage)
+	{},                         // FIELD_CUSTOM (type-specific storage)
+	FieldLayout<CBaseEntity*>(), // FIELD_CLASSPTR
+	FieldLayout<CBaseHandle>(),  // FIELD_EHANDLE
+	FieldLayout<edict_t*>(),     // FIELD_EDICT
+	FieldLayout<Vector>(),       // FIELD_POSITION_VECTOR
+	FieldLayout<float>(),        // FIELD_TIME
+	FieldLayout<int>(),          // FIELD_TICK
+	FieldLayout<string_t>(),     // FIELD_MODELNAME
+	FieldLayout<string_t>(),     // FIELD_SOUNDNAME
+	{},                         // FIELD_INPUT (no storage allocated by CBaseNPC)
+	FieldLayout<inputfunc_t>(),  // FIELD_FUNCTION
+	FieldLayout<VMatrix>(),      // FIELD_VMATRIX
+	FieldLayout<VMatrix>(),      // FIELD_VMATRIX_WORLDSPACE
+	FieldLayout<matrix3x4_t>(),  // FIELD_MATRIX3X4_WORLDSPACE
+	FieldLayout<interval_t>(),   // FIELD_INTERVAL
+	FieldLayout<int>(),          // FIELD_MODELINDEX
+	FieldLayout<int>(),          // FIELD_MATERIALINDEX
+	FieldLayout<Vector2D>(),     // FIELD_VECTOR2D
+};
+
+static_assert(sizeof(g_DataMapFieldLayouts) / sizeof(g_DataMapFieldLayouts[0]) == FIELD_TYPECOUNT);
+static_assert(sizeof(color32) == sizeof(int));
+}
 
 size_t GetAlignedOffset( size_t offset, size_t align, size_t* padding = nullptr )
 {
@@ -140,30 +152,6 @@ size_t GetAlignedOffset( size_t offset, size_t align, size_t* padding = nullptr 
 	if ( padding ) *padding = pad;
 
 	return offset + pad;
-}
-
-size_t GetAlignedOffset( size_t offset, fieldtype_t fieldType, size_t* padding = nullptr )
-{
-	size_t size;
-
-	switch ( fieldType )
-	{
-		case FIELD_VECTOR:
-		case FIELD_QUATERNION:
-		case FIELD_POSITION_VECTOR:
-		case FIELD_VMATRIX:
-		case FIELD_VMATRIX_WORLDSPACE:
-		case FIELD_MATRIX3X4_WORLDSPACE:
-		case FIELD_INTERVAL:
-		case FIELD_VECTOR2D:
-			size = 4;
-			break;
-		default:
-			size = g_DataMapDescFieldSizes[fieldType];
-			break;
-	}
-
-	return GetAlignedOffset( offset, size, padding );
 }
 
 void IDataMapContainer::EndDataDesc()
@@ -176,14 +164,16 @@ void IDataMapContainer::EndDataDesc()
 		m_vecEntityDataTypeDescriptors.AddToTail( { FIELD_VOID, 0, {0,0}, 0, 0, 0, 0, 0, 0 } );
 	}
 
-	m_DataMapDescSizeInBytes = GetAlignedOffset( m_DataMapDescSizeInBytes, sizeof(void*) );
+	const size_t startOffset = GetDataDescOffset();
+	m_DataMapDescSizeInBytes = GetAlignedOffset(startOffset + m_DataMapDescSizeInBytes, alignof(void*)) - startOffset;
 }
 
 void IDataMapContainer::DefineField(const char* name, fieldtype_t fieldType, unsigned short count, short flags, const char* externalName, float fieldTolerance)
 {
 	size_t padding = 0;
-	int fieldOffset = GetAlignedOffset( GetDataDescOffset() + m_DataMapDescSizeInBytes, fieldType, &padding );
-	int fieldSizeInBytes = g_DataMapDescFieldSizes[fieldType] * count;
+	const auto& layout = g_DataMapFieldLayouts[fieldType];
+	int fieldOffset = GetAlignedOffset( GetDataDescOffset() + m_DataMapDescSizeInBytes, layout.alignment, &padding );
+	int fieldSizeInBytes = layout.size * count;
 
 	name = name ? strdup(name) : NULL;
 	externalName = externalName ? strdup(externalName) : NULL;
@@ -203,6 +193,23 @@ void IDataMapContainer::DefineField(const char* name, fieldtype_t fieldType, uns
 	});
 
 	m_DataMapDescSizeInBytes += padding + fieldSizeInBytes;
+}
+
+void IDataMapContainer::InitializeEntityHandles(void* object) const
+{
+	if (!object)
+		return;
+
+	for (int i = 0; i < m_vecEntityDataTypeDescriptors.Count(); ++i)
+	{
+		const auto& field = m_vecEntityDataTypeDescriptors[i];
+		if (field.fieldType != FIELD_EHANDLE || (field.flags & FTYPEDESC_INPUT))
+			continue;
+
+		auto* storage = static_cast<uint8_t*>(object) + field.fieldOffset[TD_OFFSET_NORMAL];
+		for (unsigned int element = 0; element < field.fieldSize; ++element)
+			new (storage + element * sizeof(CBaseHandle)) CBaseHandle();
+	}
 }
 
 // from sourcemod/public/compat_wrappers.h
@@ -306,10 +313,11 @@ bool IDataMapContainer::GetObjectData( void* obj, const char* prop, int &data, i
 		case FIELD_MATERIALINDEX:
 		case FIELD_INTEGER:
 		case FIELD_COLOR32:
-			data = *(int32_t*)((int8_t*)obj + offset);
+			std::memcpy(&data, (int8_t*)obj + offset, sizeof(data));
 			return true;
 		case FIELD_CHARACTER:
 			data = *((int8_t*)obj + offset);
+			return true;
 		case FIELD_BOOLEAN:
 			data = *(bool*)((int8_t*)obj + offset);
 			return true;
@@ -339,7 +347,7 @@ bool IDataMapContainer::SetObjectData( void* obj, const char* prop, int data, in
 		case FIELD_MATERIALINDEX:
 		case FIELD_INTEGER:
 		case FIELD_COLOR32:
-			*(int32_t*)((int8_t*)obj + offset) = data;
+			std::memcpy((int8_t*)obj + offset, &data, sizeof(data));
 			return true;
 		case FIELD_CHARACTER:
 			*((int8_t*)obj + offset) = (int8_t)data;
@@ -865,7 +873,7 @@ bool IEntityDataMapContainer::DefineInputFunc(const char* name, fieldtype_t fiel
 void IEntityDataMapContainer::DefineOutput(const char* name, const char* mapname)
 {
 	size_t padding = 0;
-	int fieldOffset = GetAlignedOffset( GetDataDescOffset() + m_DataMapDescSizeInBytes, sizeof(int*), &padding );
+	int fieldOffset = GetAlignedOffset( GetDataDescOffset() + m_DataMapDescSizeInBytes, alignof(CBaseEntityOutput), &padding );
 	int fieldSizeInBytes = sizeof(CBaseEntityOutput);
 
 	name = name ? strdup(name) : NULL;
@@ -893,6 +901,8 @@ void IEntityDataMapContainer::CreateFields(CBaseEntity* pEntity)
 {
 	if (!m_pDataMap)
 		return;
+
+	InitializeEntityHandles(pEntity);
 	
 	for (int i = 0; i < m_pDataMap->dataNumFields; i++)
 	{

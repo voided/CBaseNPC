@@ -95,6 +95,7 @@ CBaseNPCPluginAction::CBaseNPCPluginAction(CBaseNPCPluginActionFactory* pFactory
 {
 	size_t dataSize = pFactory->GetActionDataSize();
 	m_pData = (dataSize > 0) ? calloc(1, dataSize) : nullptr;
+	pFactory->InitializeEntityHandles(m_pData);
 
 	ResetPluginActionResult();
 	ResetPluginEventResult();

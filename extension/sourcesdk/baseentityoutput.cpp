@@ -62,6 +62,7 @@ void CBaseEntityOutput::Init()
 
 	m_Value.fieldType = FIELD_VOID;
 	m_Value.iVal = 0;
+	m_Value.eVal.Term();
 }
 
 void CBaseEntityOutput::Destroy()
